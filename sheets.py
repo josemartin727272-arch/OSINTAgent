@@ -174,7 +174,7 @@ def save_results(results: list[dict]) -> None:
             "YES" if r.get("is_alert") else "no",
         ])
 
-    ws.append_rows(rows)
+    ws.append_rows(rows, value_input_option='RAW', table_range='A1')
     print(f"[sheets] Saved {len(rows)} rows to '{RESULTS_SHEET}'")
 
 
