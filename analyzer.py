@@ -59,7 +59,7 @@ def _detect_event_type(text: str) -> str:
     return "other"
 
 
-def _detect_location(text: str) -> str | None:
+def _detect_location(text: str):
     cities = ["Lima", "Cusco", "Arequipa", "Trujillo", "Piura",
               "Iquitos", "Huancayo", "Puno", "Chiclayo"]
     for city in cities:

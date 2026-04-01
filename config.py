@@ -4,6 +4,8 @@ All secrets are loaded from environment variables (GitHub Actions Secrets).
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # --- API Keys ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
