@@ -8,7 +8,7 @@ import google.generativeai as genai
 from config import GEMINI_API_KEY, COUNTRY, ALERT_THRESHOLD
 
 genai.configure(api_key=GEMINI_API_KEY)
-_model = genai.GenerativeModel("gemini-2.0-flash")  # free tier model
+_model = genai.GenerativeModel("gemini-1.5-flash-8b")  # free tier model
 
 ANALYSIS_PROMPT = """
 You are an intelligence analyst monitoring organizational activity in {country}.

@@ -40,7 +40,7 @@ GOOGLE_NEWS_RSS_TEMPLATE = (
 )
 
 # How many past hours to look back for new articles
-LOOKBACK_HOURS = 6
+LOOKBACK_HOURS = 48
 
 # Minimum Gemini relevance score (0-10) to trigger an alert
 ALERT_THRESHOLD = 6
