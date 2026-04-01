@@ -1,0 +1,40 @@
+name: OSINTAgent Scan
+
+on:
+  schedule:
+    # 5 times a day — 06:00, 10:00, 14:00, 18:00, 22:00 UTC
+    # Adjust to Peru time (UTC-5): 01:00, 05:00, 09:00, 13:00, 17:00 Peru
+    - cron: "0 6 * * *"
+    - cron: "0 10 * * *"
+    - cron: "0 14 * * *"
+    - cron: "0 18 * * *"
+    - cron: "0 22 * * *"
+  workflow_dispatch:  # allows manual trigger from GitHub UI
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run OSINTAgent
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SHEETS_CREDENTIALS_JSON: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_PASSWORD: ${{ secrets.ALERT_EMAIL_PASSWORD }}
+        run: python main.py
