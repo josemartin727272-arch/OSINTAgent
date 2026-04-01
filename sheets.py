@@ -5,7 +5,7 @@ sheets.py — Read organizations + keywords from Google Sheets and write results
 import json
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from config import GOOGLE_SHEETS_CREDENTIALS_JSON, SPREADSHEET_ID
 
@@ -154,7 +154,8 @@ def save_results(results: list[dict]) -> None:
     if not existing:
         ws.append_row(RESULTS_HEADERS)
 
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    lima_tz = timezone(timedelta(hours=-5))
+    timestamp = datetime.now(lima_tz).strftime("%Y-%m-%d %H:%M (Lima)")
     rows = []
     for r in results:
         rows.append([
