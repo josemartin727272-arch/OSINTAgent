@@ -35,7 +35,21 @@ def _text(article: dict) -> str:
 
 
 def _count(text: str, keywords: list) -> int:
-    return sum(1 for kw in keywords if kw.lower() in text)
+    """
+    For single words: match exactly.
+    For multi-word phrases: match if ALL words in the phrase appear in the text.
+    """
+    score = 0
+    for kw in keywords:
+        words = kw.lower().split()
+        if len(words) == 1:
+            if words[0] in text:
+                score += 1
+        else:
+            # All words in the phrase must appear in the text
+            if all(w in text for w in words):
+                score += 1
+    return score
 
 
 def _detect_event_type(text: str) -> str:
