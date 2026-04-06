@@ -850,11 +850,7 @@ def page_reports():
 def main():
     # Init session state
     if "ui_lang" not in st.session_state:
-        try:
-            settings = load_settings_dict()
-        except Exception:
-            settings = {}
-        st.session_state["ui_lang"] = settings.get("ui_language", "he")
+        st.session_state["ui_lang"] = "he"
 
     # RTL CSS for Hebrew
     if get_ui_lang() == "he":
