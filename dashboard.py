@@ -1,6 +1,3 @@
-import sys
-print("STARTING DASHBOARD", flush=True)
-sys.stdout.flush()
 """
 dashboard.py — OSINTAgent Streamlit Dashboard
 Pages: Findings | Organizations | Keywords | Settings | Reports
