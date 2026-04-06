@@ -312,14 +312,11 @@ def score_badge(score) -> str:
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 def render_sidebar():
-    try:
-        settings = load_settings_dict()
-    except Exception:
-        settings = {}
+    settings = {}
 
     # Language switcher at top
     lang_options = {"עברית": "he", "English": "en", "Español": "es"}
-    current_lang = st.session_state.get("ui_lang", settings.get("ui_language", "he"))
+    current_lang = st.session_state.get("ui_lang", "he")
     lang_display = {v: k for k, v in lang_options.items()}
 
     with st.sidebar:
