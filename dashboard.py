@@ -216,7 +216,9 @@ def get_gspread_client():
             return None
         creds_dict = json.loads(creds_raw)
         creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-        return gspread.authorize(creds)
+        client = gspread.authorize(creds)
+        client.timeout = 10
+        return client
     except Exception:
         return None
 
