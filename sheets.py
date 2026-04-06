@@ -1,5 +1,6 @@
 """
-sheets.py — Read organizations + keywords from Google Sheets and write results back.
+sheets.py — Google Sheets layer for OSINTAgent.
+Handles all read/write operations across all tabs.
 """
 
 import json
@@ -7,25 +8,24 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timezone, timedelta
 
-from config import GOOGLE_SHEETS_CREDENTIALS_JSON, SPREADSHEET_ID
+from config import (
+    GOOGLE_SHEETS_CREDENTIALS_JSON, SPREADSHEET_ID,
+    SHEET_ORGANIZATIONS, SHEET_RESULTS, SHEET_KEYWORDS,
+    SHEET_SETTINGS, SHEET_SCAN_LOG,
+    RESULTS_HEADERS, KEYWORDS_HEADERS, ORG_HEADERS,
+    SETTINGS_HEADERS, SCAN_LOG_HEADERS,
+    DEFAULT_COUNTRY, DEFAULT_COUNTRY_CODE, DEFAULT_LANGUAGES, ALERT_THRESHOLD,
+)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.readonly",
 ]
 
-ORG_SHEET      = "Organizations"
-RESULTS_SHEET  = "Results"
-KEYWORDS_SHEET = "Keywords"
+LIMA_TZ = timezone(timedelta(hours=-5))
 
-RESULTS_HEADERS = [
-    "timestamp", "org_name", "title", "link", "source", "published",
-    "lang", "relevance_score", "event_type", "event_date", "location",
-    "summary_he", "summary_en", "is_alert",
-]
 
-KEYWORDS_HEADERS = ["keyword", "weight", "active"]
-
+# ── Client ────────────────────────────────────────────────────────────────────
 
 def _get_client() -> gspread.Client:
     creds_dict = json.loads(GOOGLE_SHEETS_CREDENTIALS_JSON)
@@ -33,53 +33,137 @@ def _get_client() -> gspread.Client:
     return gspread.authorize(creds)
 
 
-def load_organizations() -> list[dict]:
+def _get_or_create_sheet(spreadsheet, name: str, rows=1000, cols=20) -> gspread.Worksheet:
+    try:
+        return spreadsheet.worksheet(name)
+    except gspread.WorksheetNotFound:
+        ws = spreadsheet.add_worksheet(title=name, rows=rows, cols=cols)
+        return ws
+
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+def load_settings() -> dict:
+    """Load runtime settings from Settings sheet. Falls back to defaults."""
+    defaults = {
+        "country":       DEFAULT_COUNTRY,
+        "country_code":  DEFAULT_COUNTRY_CODE,
+        "languages":     ",".join(DEFAULT_LANGUAGES),
+        "alert_threshold": str(ALERT_THRESHOLD),
+        "ui_language":   "he",
+        "email_alerts":  "true",
+        "weekly_summary": "true",
+        "monthly_summary":"true",
+    }
+    try:
+        client = _get_client()
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
+        ws = _get_or_create_sheet(spreadsheet, SHEET_SETTINGS, rows=50, cols=3)
+        records = ws.get_all_records()
+        if not records:
+            # Write defaults
+            ws.append_row(SETTINGS_HEADERS)
+            for k, v in defaults.items():
+                ws.append_row([k, v])
+            return defaults
+        return {str(r["key"]): str(r["value"]) for r in records if r.get("key")}
+    except Exception as e:
+        print(f"[sheets] Settings load failed, using defaults: {e}")
+        return defaults
+
+
+def save_setting(key: str, value: str) -> None:
     client = _get_client()
-    sheet = client.open_by_key(SPREADSHEET_ID).worksheet(ORG_SHEET)
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
+    ws = _get_or_create_sheet(spreadsheet, SHEET_SETTINGS, rows=50, cols=3)
+    records = ws.get_all_records()
+    for i, row in enumerate(records, start=2):
+        if str(row.get("key")) == key:
+            ws.update_cell(i, 2, value)
+            return
+    ws.append_row([key, value])
+
+
+# ── Organizations ─────────────────────────────────────────────────────────────
+
+def load_organizations(active_only=True) -> list[dict]:
+    client = _get_client()
+    sheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_ORGANIZATIONS)
     records = sheet.get_all_records()
     orgs = []
     for row in records:
         name = str(row.get("name", "")).strip()
         if not name:
             continue
+        active = str(row.get("active", "TRUE")).strip().upper()
+        if active_only and active not in ("TRUE", "1", "YES", ""):
+            continue
         keywords_raw = str(row.get("keywords", ""))
         keywords = [k.strip() for k in keywords_raw.split(",") if k.strip()]
         orgs.append({
-            "name": name,
+            "name":     name,
+            "platform": str(row.get("platform", "")),
+            "url":      str(row.get("url", "")),
             "keywords": keywords,
-            "country": str(row.get("country", "")).strip(),
-            "notes": str(row.get("notes", "")).strip(),
+            "country":  str(row.get("country", "")),
+            "notes":    str(row.get("notes", "")),
+            "active":   active,
         })
     print(f"[sheets] Loaded {len(orgs)} organizations")
     return orgs
 
 
-def load_keywords() -> dict:
-    """
-    Load keywords from the 'Keywords' sheet.
-    Returns: {"high": [...], "medium": [...], "low": [...], "search_queries": [...]}
-    """
+def save_organization(org: dict) -> None:
     client = _get_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
+    ws = spreadsheet.worksheet(SHEET_ORGANIZATIONS)
+    existing = ws.get_all_records()
+    # Check if exists by name
+    for i, row in enumerate(existing, start=2):
+        if str(row.get("name")) == org["name"]:
+            ws.update(f"A{i}:G{i}", [[
+                org.get("name",""), org.get("platform",""), org.get("url",""),
+                org.get("keywords",""), org.get("country",""),
+                org.get("notes",""), org.get("active","TRUE"),
+            ]])
+            return
+    ws.append_row([
+        org.get("name",""), org.get("platform",""), org.get("url",""),
+        org.get("keywords",""), org.get("country",""),
+        org.get("notes",""), org.get("active","TRUE"),
+    ])
 
-    # Create sheet with defaults if it doesn't exist
+
+def delete_organization(name: str) -> None:
+    client = _get_client()
+    ws = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_ORGANIZATIONS)
+    records = ws.get_all_records()
+    for i, row in enumerate(records, start=2):
+        if str(row.get("name")) == name:
+            ws.delete_rows(i)
+            return
+
+
+# ── Keywords ──────────────────────────────────────────────────────────────────
+
+def load_keywords() -> dict:
+    client = _get_client()
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
     try:
-        ws = spreadsheet.worksheet(KEYWORDS_SHEET)
+        ws = spreadsheet.worksheet(SHEET_KEYWORDS)
     except gspread.WorksheetNotFound:
-        ws = _create_default_keywords_sheet(spreadsheet)
+        ws = spreadsheet.add_worksheet(title=SHEET_KEYWORDS, rows=200, cols=5)
+        ws.append_row(KEYWORDS_HEADERS)
 
     records = ws.get_all_records()
-
     high, medium, low, search_queries = [], [], [], []
 
     for row in records:
         keyword = str(row.get("keyword", "")).strip()
         weight  = str(row.get("weight", "2")).strip()
         active  = str(row.get("active", "TRUE")).strip().upper()
-
         if not keyword or active not in ("TRUE", "1", "YES"):
             continue
-
         w = int(weight) if weight.isdigit() else 2
         if w >= 3:
             high.append(keyword)
@@ -87,75 +171,57 @@ def load_keywords() -> dict:
             medium.append(keyword)
         else:
             low.append(keyword)
-
-        # Also use as RSS search query
         search_queries.append(keyword)
 
-    print(f"[sheets] Loaded {len(high)+len(medium)+len(low)} keywords "
-          f"(high:{len(high)} medium:{len(medium)} low:{len(low)})")
-    return {
-        "high": high,
-        "medium": medium,
-        "low": low,
-        "search_queries": search_queries,
-    }
+    print(f"[sheets] Keywords: high={len(high)} medium={len(medium)} low={len(low)}")
+    return {"high": high, "medium": medium, "low": low, "search_queries": search_queries}
 
 
-def _create_default_keywords_sheet(spreadsheet) -> gspread.Worksheet:
-    """Create Keywords sheet with sensible defaults."""
-    ws = spreadsheet.add_worksheet(title=KEYWORDS_SHEET, rows=200, cols=5)
-    ws.append_row(KEYWORDS_HEADERS)
+def save_keyword(keyword: str, weight: int, active: bool) -> None:
+    client = _get_client()
+    ws = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_KEYWORDS)
+    records = ws.get_all_records()
+    for i, row in enumerate(records, start=2):
+        if str(row.get("keyword")) == keyword:
+            ws.update(f"A{i}:C{i}", [[keyword, weight, "TRUE" if active else "FALSE"]])
+            return
+    ws.append_row([keyword, weight, "TRUE" if active else "FALSE"])
 
-    defaults = [
-        # weight 3 — high
-        ["manifestación Israel", 3, "TRUE"],
-        ["manifestación contra Israel", 3, "TRUE"],
-        ["marcha contra Israel", 3, "TRUE"],
-        ["marcha Palestina Perú", 3, "TRUE"],
-        ["protesta Israel Lima", 3, "TRUE"],
-        ["boicot Israel Perú", 3, "TRUE"],
-        ["BDS Perú", 3, "TRUE"],
-        ["antisemitismo Perú", 3, "TRUE"],
-        ["against Israel Peru", 3, "TRUE"],
-        ["protest Israel Peru", 3, "TRUE"],
-        # weight 2 — medium
-        ["solidaridad Palestina Perú", 2, "TRUE"],
-        ["contra Israel Lima", 2, "TRUE"],
-        ["Palestina Libre Lima", 2, "TRUE"],
-        ["Free Palestine Peru", 2, "TRUE"],
-        ["boicot Lima", 2, "TRUE"],
-        ["huelga Israel", 2, "TRUE"],
-        ["הפגנה פרו", 2, "TRUE"],
-        ["boycott Lima", 2, "TRUE"],
-        # weight 1 — low / informational
-        ["Palestina Perú", 1, "TRUE"],
-        ["Gaza Lima", 1, "TRUE"],
-        ["Israel Lima noticias", 1, "TRUE"],
-    ]
-    ws.append_rows(defaults)
-    print(f"[sheets] Created '{KEYWORDS_SHEET}' sheet with {len(defaults)} default keywords")
-    return ws
+
+def delete_keyword(keyword: str) -> None:
+    client = _get_client()
+    ws = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_KEYWORDS)
+    records = ws.get_all_records()
+    for i, row in enumerate(records, start=2):
+        if str(row.get("keyword")) == keyword:
+            ws.delete_rows(i)
+            return
+
+
+# ── Results ───────────────────────────────────────────────────────────────────
+
+def load_results(days_back=90) -> list[dict]:
+    client = _get_client()
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
+    try:
+        ws = spreadsheet.worksheet(SHEET_RESULTS)
+    except gspread.WorksheetNotFound:
+        return []
+    records = ws.get_all_records()
+    return records
 
 
 def save_results(results: list[dict]) -> None:
     if not results:
-        print("[sheets] No results to save")
         return
-
     client = _get_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
-
-    try:
-        ws = spreadsheet.worksheet(RESULTS_SHEET)
-    except gspread.WorksheetNotFound:
-        ws = spreadsheet.add_worksheet(title=RESULTS_SHEET, rows=1000, cols=len(RESULTS_HEADERS))
-
+    ws = _get_or_create_sheet(spreadsheet, SHEET_RESULTS)
     existing = ws.get_all_values()
     if not existing:
         ws.append_row(RESULTS_HEADERS)
 
-    lima_tz = timezone(timedelta(hours=-5))
-    timestamp = datetime.now(lima_tz).strftime("%Y-%m-%d %H:%M (Lima)")
+    timestamp = datetime.now(LIMA_TZ).strftime("%Y-%m-%d %H:%M (Lima)")
     rows = []
     for r in results:
         rows.append([
@@ -174,16 +240,15 @@ def save_results(results: list[dict]) -> None:
             r.get("summary_en", ""),
             "YES" if r.get("is_alert") else "no",
         ])
-
     ws.append_rows(rows, value_input_option='RAW', table_range='A1')
-    print(f"[sheets] Saved {len(rows)} rows to '{RESULTS_SHEET}'")
+    print(f"[sheets] Saved {len(rows)} results")
 
 
-def get_existing_links() -> set[str]:
+def get_existing_links() -> set:
     client = _get_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
     try:
-        ws = spreadsheet.worksheet(RESULTS_SHEET)
+        ws = spreadsheet.worksheet(SHEET_RESULTS)
         all_values = ws.get_all_values()
         if len(all_values) <= 1:
             return set()
@@ -191,3 +256,18 @@ def get_existing_links() -> set[str]:
         return {row[link_col] for row in all_values[1:] if len(row) > link_col}
     except gspread.WorksheetNotFound:
         return set()
+
+
+# ── Scan Log ──────────────────────────────────────────────────────────────────
+
+def log_scan(status: str, fetched: int, relevant: int, alerts: int,
+             duration_sec: float, notes: str = "") -> None:
+    client = _get_client()
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
+    ws = _get_or_create_sheet(spreadsheet, SHEET_SCAN_LOG, rows=500, cols=8)
+    existing = ws.get_all_values()
+    if not existing:
+        ws.append_row(SCAN_LOG_HEADERS)
+    timestamp = datetime.now(LIMA_TZ).strftime("%Y-%m-%d %H:%M (Lima)")
+    ws.append_row([timestamp, status, fetched, relevant, alerts,
+                   round(duration_sec, 1), notes])

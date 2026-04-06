@@ -1,0 +1,45 @@
+name: OSINT Weekly Summary
+
+on:
+  schedule:
+    # Every Sunday at 18:00 Lima (23:00 UTC)
+    - cron: '0 23 * * 0'
+  workflow_dispatch:
+    inputs:
+      period:
+        description: 'Report period'
+        required: true
+        default: 'weekly'
+        type: choice
+        options:
+          - weekly
+          - monthly
+          - annual
+
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run summary
+        env:
+          GOOGLE_SHEETS_CREDENTIALS_JSON: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_PASSWORD: ${{ secrets.ALERT_EMAIL_PASSWORD }}
+        run: |
+          PERIOD="${{ github.event.inputs.period || 'weekly' }}"
+          python summary_runner.py --period $PERIOD

@@ -3,74 +3,85 @@ main.py — OSINTAgent entry point.
 """
 
 import sys
+import time
 from scanner import fetch_all_articles
 from analyzer import analyze_all
-from sheets import load_organizations, load_keywords, save_results, get_existing_links
+from sheets import (load_organizations, load_keywords, load_settings,
+                    save_results, get_existing_links, log_scan)
 from notifier import send_alert_email
 from config import ALERT_THRESHOLD
 
 
 def run():
+    start = time.time()
     print("=" * 60)
     print("OSINTAgent — Starting scan")
     print("=" * 60)
 
-    # 1. Load organizations + keywords from Google Sheets
+    # 1. Load runtime settings
+    settings = load_settings()
+    country      = settings.get("country", "Peru")
+    country_code = settings.get("country_code", "PE")
+    languages    = [l.strip() for l in settings.get("languages", "es,en,he").split(",") if l.strip()]
+    threshold    = int(settings.get("alert_threshold", str(ALERT_THRESHOLD)))
+    email_alerts = settings.get("email_alerts", "true").lower() == "true"
+
+    print(f"[main] Country={country} ({country_code}) | Languages={languages} | Threshold={threshold}")
+
+    # 2. Load organizations + keywords
     try:
         organizations = load_organizations()
         keywords = load_keywords()
     except Exception as e:
         print(f"[main] Failed to load data: {e}")
+        log_scan("ERROR", 0, 0, 0, time.time()-start, str(e))
         sys.exit(1)
 
     if not organizations:
         print("[main] No organizations found. Exiting.")
         sys.exit(0)
 
-    # 2. Fetch articles
-    articles = fetch_all_articles(organizations, keywords)
-    print(f"\n[main] Total articles fetched: {len(articles)}")
+    # 3. Fetch
+    articles = fetch_all_articles(organizations, keywords, languages, country_code)
+    print(f"\n[main] Fetched: {len(articles)}")
 
     if not articles:
-        print("[main] No new articles found.")
+        log_scan("OK", 0, 0, 0, time.time()-start, "No articles fetched")
         return
 
-    # 3. Deduplicate
+    # 4. Deduplicate
     try:
         existing_links = get_existing_links()
         articles = [a for a in articles if a["link"] not in existing_links]
-        print(f"[main] After deduplication: {len(articles)} new articles")
+        print(f"[main] After dedup: {len(articles)}")
     except Exception as e:
-        print(f"[main] Warning: could not check duplicates: {e}")
+        print(f"[main] Dedup warning: {e}")
 
     if not articles:
-        print("[main] All articles already processed.")
+        log_scan("OK", 0, 0, 0, time.time()-start, "All duplicates")
         return
 
-    # 4. Analyze
-    print(f"\n[main] Analyzing {len(articles)} articles...")
-    results = analyze_all(articles, keywords)
-    print(f"[main] Relevant results: {len(results)}")
+    # 5. Analyze
+    results = analyze_all(articles, keywords, country, threshold)
+    print(f"[main] Relevant: {len(results)}")
 
-    # 5. Save
+    # 6. Save
     try:
         save_results(results)
     except Exception as e:
-        print(f"[main] Failed to save results: {e}")
+        print(f"[main] Save failed: {e}")
 
-    # 6. Alert
-    alerts = [r for r in results if r.get("relevance_score", 0) >= ALERT_THRESHOLD]
-    print(f"\n[main] High-relevance alerts (score >= {ALERT_THRESHOLD}): {len(alerts)}")
-    if alerts:
+    # 7. Alert
+    alerts = [r for r in results if r.get("relevance_score", 0) >= threshold]
+    if alerts and email_alerts:
         try:
             send_alert_email(alerts)
         except Exception as e:
             print(f"[main] Email error: {e}")
 
-    print(f"\n[main] Scan complete.")
-    print(f"  Total fetched:  {len(articles)}")
-    print(f"  Relevant:       {len(results)}")
-    print(f"  Alerts sent:    {len(alerts)}")
+    duration = time.time() - start
+    log_scan("OK", len(articles), len(results), len(alerts), duration)
+    print(f"\n[main] Done in {duration:.1f}s | fetched={len(articles)} relevant={len(results)} alerts={len(alerts)}")
 
 
 if __name__ == "__main__":
