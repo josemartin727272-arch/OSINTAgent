@@ -2,37 +2,27 @@ name: OSINT Scan
 
 on:
   schedule:
-    # 5x/day — Peru time (UTC-5):
-    # 07:00 Lima = 12:00 UTC
-    # 10:00 Lima = 15:00 UTC
-    # 13:00 Lima = 18:00 UTC
-    # 16:00 Lima = 21:00 UTC
-    # 19:00 Lima = 00:00 UTC
-    - cron: '0 12 * * *'
-    - cron: '0 15 * * *'
-    - cron: '0 18 * * *'
-    - cron: '0 21 * * *'
-    - cron: '0 0 * * *'
-  workflow_dispatch:  # Manual trigger from GitHub UI
+    - cron: '0 11 * * *'
+    - cron: '0 14 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 20 * * *'
+    - cron: '0 23 * * *'
+    - cron: '0 2 * * *'
+    - cron: '0 5 * * *'
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run OSINT scan
+      - run: pip install -r requirements.txt
+      - name: Run scan
         env:
           GOOGLE_SHEETS_CREDENTIALS_JSON: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
