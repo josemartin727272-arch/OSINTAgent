@@ -648,7 +648,8 @@ def page_keywords():
 
 def page_settings():
     st.header(t("page_settings"))
-    settings = load_sheet("Settings").set_index("key")["value"].to_dict() if not load_sheet("Settings").empty else {}
+    df_s = load_sheet("Settings")
+    settings = dict(zip(df_s["key"], df_s["value"])) if not df_s.empty and "key" in df_s.columns else {}
 
     with st.form("settings_form"):
         st.subheader(f"🌍 {t('country_setting')}")
