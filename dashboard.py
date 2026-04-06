@@ -648,7 +648,7 @@ def page_keywords():
 
 def page_settings():
     st.header(t("page_settings"))
-    df_s = load_sheet("Settings")
+    df_s = load_sheet_data("Settings")
     settings = dict(zip(df_s["key"], df_s["value"])) if not df_s.empty and "key" in df_s.columns else {}
 
     with st.form("settings_form"):
