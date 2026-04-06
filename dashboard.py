@@ -431,7 +431,7 @@ def page_findings():
     st.markdown("---")
 
     # ── Table ─────────────────────────────────────────────────────────────────
-    for _, row in filtered.iterrows():
+    for idx, row in filtered.iterrows():
         score = row.get("relevance_score", 0)
         try:
             score_val = float(score)
@@ -450,11 +450,12 @@ def page_findings():
         loc = str(row.get("location", ""))
         summary_he = str(row.get("summary_he", ""))
         is_alert = str(row.get("is_alert", "")).upper() == "YES"
+        current_rating = int(row.get("rating", 0)) if str(row.get("rating", "")).isdigit() else 0
 
         with st.container():
             st.markdown(
                 f'<div style="border-left:4px solid {border};background:{bg};'
-                f'padding:12px 16px;margin-bottom:8px;border-radius:4px;">'
+                f'padding:12px 16px;margin-bottom:4px;border-radius:4px;">'
                 f'{score_badge(score_val)} &nbsp; '
                 f'<strong><a href="{link}" target="_blank" style="color:#333;text-decoration:none;">{title[:120]}</a></strong>'
                 f'{"&nbsp; 🔔" if is_alert else ""}'
@@ -464,6 +465,39 @@ def page_findings():
                 f'</div>',
                 unsafe_allow_html=True
             )
+
+            # ── Star rating ───────────────────────────────────────────────
+            stars_label = {0: "לא דורג", 1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐"}
+            col_r1, col_r2, col_r3, col_r4, col_r5, col_cur = st.columns([1,1,1,1,1,4])
+            for star, col in zip([1,2,3,4,5], [col_r1,col_r2,col_r3,col_r4,col_r5]):
+                btn_label = "⭐" if star <= current_rating else "☆"
+                if col.button(btn_label, key=f"rate_{idx}_{star}"):
+                    # Save rating to Sheets
+                    try:
+                        client = get_gspread_client()
+                        if client:
+                            ws = client.open_by_key(SPREADSHEET_ID).worksheet("Results")
+                            all_vals = ws.get_all_values()
+                            headers = all_vals[0] if all_vals else []
+                            # Add rating column if missing
+                            if "rating" not in headers:
+                                ws.update_cell(1, len(headers)+1, "rating")
+                                rating_col = len(headers)+1
+                            else:
+                                rating_col = headers.index("rating") + 1
+                            # Find the row by link
+                            for r_idx, r_row in enumerate(all_vals[1:], start=2):
+                                link_col = headers.index("link") if "link" in headers else 3
+                                if len(r_row) > link_col and r_row[link_col] == link:
+                                    ws.update_cell(r_idx, rating_col, star)
+                                    break
+                            st.cache_data.clear()
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Rating save failed: {e}")
+            if current_rating > 0:
+                col_cur.caption(f"דירוג: {stars_label[current_rating]}")
+            st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
 
 
 # ─── Page: Organizations ──────────────────────────────────────────────────────
