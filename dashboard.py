@@ -207,7 +207,7 @@ SCAN_LANGUAGES = {
 
 # ─── Google Sheets helpers ────────────────────────────────────────────────────
 
-@st.cache_data(ttl=600)
+@st.cache_resource(ttl=600)
 def get_gspread_client():
     """Get authenticated gspread client. Cached 5 min."""
     try:
