@@ -347,20 +347,7 @@ def render_sidebar():
         ]
         page = st.radio("Navigation", pages, label_visibility="collapsed")
 
-        # Quick KPIs
         st.markdown("---")
-        df_results = load_sheet_data("Results")
-        if not df_results.empty:
-            total = len(df_results)
-            alerts = len(df_results[df_results.get("is_alert", pd.Series()).astype(str).str.upper() == "YES"]) if "is_alert" in df_results else 0
-            st.metric(t("total"), total)
-            st.metric(t("alerts_count"), alerts)
-
-        # Last scan
-        df_log = load_sheet_data("ScanLog")
-        if not df_log.empty:
-            last = df_log.iloc[-1]
-            st.caption(f"⏱ {t('last_scan')}: {str(last.get('timestamp',''))[:16]}")
 
     return page
 
