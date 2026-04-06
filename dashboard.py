@@ -350,17 +350,8 @@ def render_sidebar():
 def page_findings():
     st.header(t("page_findings"))
 
-    if "results_loaded" not in st.session_state:
-        if st.button("📥 טען ממצאים", type="primary"):
-            with st.spinner(t("loading")):
-                st.session_state["results_df"] = load_sheet_data("Results")
-                st.session_state["results_loaded"] = True
-            st.rerun()
-        else:
-            st.info("לחץ על הכפתור לטעינת הנתונים")
-            return
-
-    df = st.session_state.get("results_df", pd.DataFrame())
+    with st.spinner(t("loading")):
+        df = load_sheet_data("Results")
 
     if df.empty:
         st.info(t("no_data"))
