@@ -1,8 +1,7 @@
 [server]
 headless = true
-
-[runner]
-fastReruns = false
+enableCORS = false
+enableXsrfProtection = false
 
 [browser]
 gatherUsageStats = false
