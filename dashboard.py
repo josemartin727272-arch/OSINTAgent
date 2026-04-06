@@ -835,6 +835,8 @@ def main():
     # Init session state
     if "ui_lang" not in st.session_state:
         st.session_state["ui_lang"] = "he"
+    if "initialized" not in st.session_state:
+        st.session_state["initialized"] = True
 
     # RTL CSS for Hebrew
     if get_ui_lang() == "he":
