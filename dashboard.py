@@ -207,7 +207,7 @@ SCAN_LANGUAGES = {
 
 # ─── Google Sheets helpers ────────────────────────────────────────────────────
 
-@st.cache_resource(ttl=300)
+@st.cache_resource(ttl=600)
 def get_gspread_client():
     """Get authenticated gspread client. Cached 5 min."""
     try:
@@ -225,7 +225,7 @@ def get_gspread_client():
         return None
 
 
-@st.cache_data(ttl=120)
+@st.cache_data(ttl=300)
 def load_sheet_data(sheet_name: str) -> pd.DataFrame:
     client = get_gspread_client()
     if not client:
