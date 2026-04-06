@@ -314,7 +314,10 @@ def score_badge(score) -> str:
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 def render_sidebar():
-    settings = load_settings_dict()
+    try:
+        settings = load_settings_dict()
+    except Exception:
+        settings = {}
 
     # Language switcher at top
     lang_options = {"עברית": "he", "English": "en", "Español": "es"}
@@ -659,7 +662,10 @@ def page_keywords():
 
 def page_settings():
     st.header(t("page_settings"))
-    settings = load_settings_dict()
+    try:
+        settings = load_settings_dict()
+    except Exception:
+        settings = {}
 
     with st.form("settings_form"):
         st.subheader(f"🌍 {t('country_setting')}")
@@ -846,7 +852,10 @@ def page_reports():
 def main():
     # Init session state
     if "ui_lang" not in st.session_state:
+        try:
         settings = load_settings_dict()
+    except Exception:
+        settings = {}
         st.session_state["ui_lang"] = settings.get("ui_language", "he")
 
     # RTL CSS for Hebrew
