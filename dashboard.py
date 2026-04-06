@@ -207,21 +207,17 @@ SCAN_LANGUAGES = {
 
 # ─── Google Sheets helpers ────────────────────────────────────────────────────
 
-@st.cache_resource(ttl=600)
+@st.cache_resource(ttl=600, show_spinner=False)
 def get_gspread_client():
     """Get authenticated gspread client. Cached 5 min."""
     try:
-        # Try Streamlit secrets first (cloud)
-        creds_raw = st.secrets.get("GOOGLE_SHEETS_CREDENTIALS_JSON", "")
-        if not creds_raw:
-            creds_raw = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_JSON", "")
+        creds_raw = st.secrets.get("GOOGLE_SHEETS_CREDENTIALS_JSON", "") or os.environ.get("GOOGLE_SHEETS_CREDENTIALS_JSON", "")
         if not creds_raw:
             return None
         creds_dict = json.loads(creds_raw)
         creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         return gspread.authorize(creds)
-    except Exception as e:
-        st.error(f"Sheets connection failed: {e}")
+    except Exception:
         return None
 
 
