@@ -347,7 +347,7 @@ def render_sidebar():
             t("page_settings"),
             t("page_reports"),
         ]
-        page = st.radio("", pages, label_visibility="collapsed")
+        page = st.radio("Navigation", pages, label_visibility="collapsed")
 
         # Quick KPIs
         st.markdown("---")
