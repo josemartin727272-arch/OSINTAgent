@@ -253,7 +253,7 @@ def get_worksheet(sheet_name: str):
         return None
 
 
-def save_setting_to_sheet(key: str, value: str):
+def save_setting(key: str, value: str):
     ws = get_worksheet("Settings")
     if not ws:
         return
@@ -698,13 +698,13 @@ def page_settings():
 
     if submitted:
         lang_codes = ",".join([SCAN_LANGUAGES[l] for l in sel_langs if l in SCAN_LANGUAGES])
-        save_setting_to_sheet("country", sel_country)
-        save_setting_to_sheet("country_code", sel_code.upper())
-        save_setting_to_sheet("languages", lang_codes)
-        save_setting_to_sheet("alert_threshold", str(sel_threshold))
-        save_setting_to_sheet("email_alerts", "true" if sel_email else "false")
-        save_setting_to_sheet("weekly_summary", "true" if sel_weekly else "false")
-        save_setting_to_sheet("monthly_summary", "true" if sel_monthly else "false")
+        save_setting("country", sel_country)
+        save_setting("country_code", sel_code.upper())
+        save_setting("languages", lang_codes)
+        save_setting("alert_threshold", str(sel_threshold))
+        save_setting("email_alerts", "true" if sel_email else "false")
+        save_setting("weekly_summary", "true" if sel_weekly else "false")
+        save_setting("monthly_summary", "true" if sel_monthly else "false")
         st.success(t("settings_saved"))
         st.rerun()
 
