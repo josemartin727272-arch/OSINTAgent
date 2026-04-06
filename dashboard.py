@@ -745,7 +745,7 @@ def page_reports():
     now = pd.Timestamp.now()
 
     # Period selector
-    period = st.radio("", [t("weekly"), t("monthly"), t("annual")], horizontal=True)
+    period = st.radio("Period", [t("weekly"), t("monthly"), t("annual")], horizontal=True)
 
     if period == t("weekly"):
         cutoff = now - pd.Timedelta(days=7)
