@@ -271,7 +271,7 @@ def save_setting_to_sheet(key: str, value: str):
 
 
 def load_settings_dict() -> dict:
-    df = load_sheet_data("Settings")
+    df = load_sheet("Settings")
     if df.empty:
         return {}
     return {str(r["key"]): str(r["value"]) for _, r in df.iterrows() if r.get("key")}
