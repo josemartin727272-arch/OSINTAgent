@@ -231,24 +231,9 @@ def load_sheet_data(sheet_name: str) -> pd.DataFrame:
     if not client:
         return pd.DataFrame()
     try:
-        import threading, queue
-        q = queue.Queue()
-        def fetch():
-            try:
-                ws = client.open_by_key(SPREADSHEET_ID).worksheet(sheet_name)
-                q.put(ws.get_all_records())
-            except Exception as ex:
-                q.put(ex)
-        t = threading.Thread(target=fetch)
-        t.daemon = True
-        t.start()
-        t.join(timeout=10)
-        if t.is_alive() or q.empty():
-            return pd.DataFrame()
-        result = q.get()
-        if isinstance(result, Exception):
-            return pd.DataFrame()
-        return pd.DataFrame(result) if result else pd.DataFrame()
+        ws = client.open_by_key(SPREADSHEET_ID).worksheet(sheet_name)
+        records = ws.get_all_records()
+        return pd.DataFrame(records) if records else pd.DataFrame()
     except Exception:
         return pd.DataFrame()
 
