@@ -314,29 +314,20 @@ def score_badge(score) -> str:
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 def render_sidebar():
-    settings = load_settings()
-
-    # Language switcher at top
-    lang_options = {"עברית": "he", "English": "en", "Español": "es"}
-    current_lang = st.session_state.get("ui_lang", settings.get("ui_language", "he"))
-    lang_display = {v: k for k, v in lang_options.items()}
-
     with st.sidebar:
         # Language
+        lang_options = {"עברית": "he", "English": "en", "Español": "es"}
         cols = st.columns(3)
         for i, (label, code) in enumerate(lang_options.items()):
             if cols[i].button(label, key=f"lang_{code}",
-                              type="primary" if current_lang == code else "secondary"):
+                              type="primary" if get_ui_lang() == code else "secondary"):
                 st.session_state["ui_lang"] = code
-                save_setting_to_sheet("ui_language", code)
                 st.rerun()
 
         st.markdown("---")
         st.title(t("title"))
         st.caption(t("subtitle"))
-
-        country = settings.get("country", "Peru")
-        st.info(f"🌍 {country}")
+        st.info("🌍 Peru")
 
         st.markdown("---")
 
