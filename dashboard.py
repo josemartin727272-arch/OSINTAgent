@@ -222,7 +222,7 @@ def get_gspread_client():
         return None
 
 
-@st.cache_data(ttl=300)
+
 def load_sheet_data(sheet_name: str) -> pd.DataFrame:
     client = get_gspread_client()
     if not client:
