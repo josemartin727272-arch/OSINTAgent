@@ -228,6 +228,8 @@ def load_sheet_data(sheet_name: str) -> pd.DataFrame:
     if not client:
         return pd.DataFrame()
     try:
+        import socket
+        socket.setdefaulttimeout(15)
         ws = client.open_by_key(SPREADSHEET_ID).worksheet(sheet_name)
         records = ws.get_all_records()
         return pd.DataFrame(records) if records else pd.DataFrame()
