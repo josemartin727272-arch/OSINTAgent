@@ -648,7 +648,7 @@ def page_keywords():
 
 def page_settings():
     st.header(t("page_settings"))
-    settings = load_settings()
+    settings = load_sheet("Settings").set_index("key")["value"].to_dict() if not load_sheet("Settings").empty else {}
 
     with st.form("settings_form"):
         st.subheader(f"🌍 {t('country_setting')}")
