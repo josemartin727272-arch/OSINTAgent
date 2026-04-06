@@ -5,3 +5,4 @@ feedparser>=6.0.11
 python-dotenv>=1.0.0
 pandas>=2.0.0
 pillow>=11.0.0
+# updated Mon Apr  6 10:21:58 -05 2026
