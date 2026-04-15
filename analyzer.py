@@ -146,6 +146,25 @@ def get_event_label(event_type: str, lang: str = "he") -> str:
     return EVENT_TYPE_LABELS.get(lang, EVENT_TYPE_LABELS["en"]).get(event_type, event_type)
 
 
+def _build_summary_by_lang(article: dict, event_type: str,
+                           location: str, lang: str = "he") -> str:
+    title = article.get("title", "")
+    loc = location or "—"
+    if lang == "he":
+        return f"זוהה {get_event_label(event_type, 'he')} במיקום: {loc}. כותרת: {title}"
+    if lang == "es":
+        return f"Detectado {get_event_label(event_type, 'es')} en: {loc}. Título: {title}"
+    return f"Detected {get_event_label(event_type, 'en')} in: {loc}. Title: {title}"
+
+
+def _build_summary_en(article: dict, event_type: str,
+                      location: str, score: int) -> str:
+    title = article.get("title", "")
+    source = article.get("source", "")
+    loc = location or "unknown"
+    return f"{get_event_label(event_type, 'en')} in {loc}. {title} (Source: {source}, Score: {score}/10)"
+
+
 def _title_words(record: dict) -> list:
     title = str(record.get("title", "")).lower()
     return [w for w in _WORD_RE.findall(title) if w not in _STOPWORDS]
@@ -210,6 +229,7 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
             "location":        None,
             "summary_en":      "",
             "summary_he":      "",
+            "summary_es":      "",
             "is_alert":        False,
             "is_global":       False,
         }
@@ -253,8 +273,9 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
         "event_type":      event_type,
         "event_date":      None,
         "location":        location,
-        "summary_en": f"{article.get('title','')} (Source: {article.get('source','')}). Score: {score}/10.",
-        "summary_he": f"זוהה {get_event_label(event_type,'he')} במיקום: {location or 'לא ידוע'}. כותרת: {article.get('title','')}",
+        "summary_en": _build_summary_en(article, event_type, location, score),
+        "summary_he": _build_summary_by_lang(article, event_type, location, "he"),
+        "summary_es": _build_summary_by_lang(article, event_type, location, "es"),
         "is_alert":   score >= threshold,
         "is_global":  is_global,
     }

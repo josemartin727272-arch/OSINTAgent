@@ -528,6 +528,21 @@ def t(key: str) -> str:
     return UI_TEXT.get(lang, UI_TEXT["he"]).get(key, key)
 
 
+def get_summary(row) -> str:
+    """Summary in the current UI language, with fallbacks."""
+    lang = get_ui_lang()
+    if lang == "he":
+        return str(row.get("summary_he", "")) or str(row.get("summary_en", ""))
+    if lang == "es":
+        return (str(row.get("summary_es", ""))
+                or str(row.get("ai_reason", ""))
+                or str(row.get("summary_en", ""))
+                or str(row.get("summary_he", "")))
+    return (str(row.get("summary_en", ""))
+            or str(row.get("ai_reason", ""))
+            or str(row.get("summary_he", "")))
+
+
 def event_label(etype: str) -> str:
     lang = get_ui_lang()
     return EVENT_TYPE_LABELS.get(etype, {}).get(lang, etype)
@@ -627,7 +642,7 @@ def _render_finding_card(row, idx, with_rating=True):
     org = str(row.get("org_name", ""))
     etype = str(row.get("event_type", ""))
     loc = str(row.get("location", ""))
-    summary_he = str(row.get("summary_he", ""))
+    summary = get_summary(row)
     is_alert = str(row.get("is_alert", "")).upper() == "YES"
     current_rating = int(row.get("rating", 0)) if str(row.get("rating", "")).isdigit() else 0
 
@@ -639,7 +654,7 @@ def _render_finding_card(row, idx, with_rating=True):
         f'{"&nbsp; 🔔" if is_alert else ""}'
         f'<br><span style="color:#888;font-size:12px;">📰 {source} &nbsp;|&nbsp; 📅 {ts} &nbsp;|&nbsp; '
         f'🏢 {org} &nbsp;|&nbsp; {event_label(etype)} &nbsp;|&nbsp; 📍 {loc}</span>'
-        f'<br><span style="font-size:12px;color:#555;">{summary_he}</span>'
+        f'<br><span style="font-size:12px;color:#555;">{summary}</span>'
         f'</div>',
         unsafe_allow_html=True
     )
@@ -683,7 +698,7 @@ def _render_global_card(row):
     source = str(row.get("source", ""))
     ts = str(row.get("timestamp", ""))[:16]
     loc = str(row.get("location", "") or "—")
-    summary_he = str(row.get("summary_he", ""))[:160]
+    summary = get_summary(row)[:160]
     try:
         score = float(row.get("relevance_score", 0) or 0)
     except Exception:
@@ -694,7 +709,7 @@ def _render_global_card(row):
         f'🌍 <strong><a href="{link}" target="_blank" style="color:#9ecbff;text-decoration:none;">{title}</a></strong>'
         f'&nbsp;<span style="background:#2980b9;padding:1px 8px;border-radius:10px;font-size:11px;">{score:.0f}/10</span><br>'
         f'<span style="font-size:12px;opacity:.8;">📍 {loc} | {source} | {ts}</span><br>'
-        f'<span style="font-size:12px;">{summary_he}</span>'
+        f'<span style="font-size:12px;">{summary}</span>'
         f'</div>',
         unsafe_allow_html=True
     )
@@ -858,7 +873,7 @@ def page_home():
             source = str(row.get("source", ""))
             ts = str(row.get("timestamp", ""))[:16]
             etype = str(row.get("event_type", ""))
-            summary_he = str(row.get("summary_he", ""))[:100]
+            summary = get_summary(row)[:100]
             st.markdown(
                 f'<div style="padding:8px 12px;margin-bottom:4px;border-radius:4px;background:#fafafa;'
                 f'border-left:3px solid {color};">'
@@ -867,7 +882,7 @@ def page_home():
                 f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span> '
                 f'<a href="{link}" target="_blank" style="color:#222;text-decoration:none;font-weight:600;">{title}</a>'
                 f'<br><span style="font-size:11px;color:#888;">{source} | {ts}</span>'
-                f'<br><span style="font-size:12px;color:#555;">{summary_he}</span>'
+                f'<br><span style="font-size:12px;color:#555;">{summary}</span>'
                 f'</div>',
                 unsafe_allow_html=True
             )
@@ -946,14 +961,14 @@ def page_review():
     ts = str(row.get("timestamp", ""))[:16]
     org = str(row.get("org_name", ""))
     loc = str(row.get("location", "") or "—")
-    summary_he = str(row.get("summary_he", ""))
+    summary = get_summary(row)
 
     st.markdown(
         f'<div style="border:2px solid {color};border-radius:8px;padding:14px 16px;margin-bottom:14px;background:#fff;">'
         f'<span style="background:{color};color:white;padding:3px 12px;border-radius:12px;font-weight:bold;">{score:.0f}/10</span>'
         f'&nbsp;&nbsp;<strong style="font-size:16px;"><a href="{link}" target="_blank" style="color:#222;text-decoration:none;">{title}</a></strong>'
         f'<div style="color:#777;font-size:12px;margin-top:6px;">📰 {source} | 📅 {ts} | 🏢 {org} | 📍 {loc}</div>'
-        f'<div style="font-size:13px;color:#444;margin-top:8px;">{summary_he}</div>'
+        f'<div style="font-size:13px;color:#444;margin-top:8px;">{summary}</div>'
         f'</div>',
         unsafe_allow_html=True
     )
@@ -1003,10 +1018,11 @@ def page_feed():
     filtered = df.copy()
     if search_q:
         q = search_q.lower()
-        filtered = filtered[
-            filtered["title"].astype(str).str.lower().str.contains(q, na=False) |
-            filtered["summary_he"].astype(str).str.lower().str.contains(q, na=False)
-        ]
+        mask = filtered["title"].astype(str).str.lower().str.contains(q, na=False)
+        for col in ("summary_he", "summary_en", "summary_es"):
+            if col in filtered.columns:
+                mask = mask | filtered[col].astype(str).str.lower().str.contains(q, na=False)
+        filtered = filtered[mask]
 
     now = pd.Timestamp.now()
     if period == t("period_today"):
@@ -1052,7 +1068,7 @@ def page_feed():
         ts = str(row.get("timestamp", ""))[:16]
         etype = str(row.get("event_type", ""))
         loc = str(row.get("location", "") or "—")
-        summary_he = str(row.get("summary_he", ""))[:200]
+        summary = get_summary(row)[:200]
         st.markdown(
             f'<div style="border-left:4px solid {color};background:#fafafa;'
             f'padding:10px 14px;margin-bottom:6px;border-radius:4px;">'
@@ -1061,7 +1077,7 @@ def page_feed():
             f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span>&nbsp;'
             f'<span style="font-size:12px;color:#777;">📍 {loc}</span><br>'
             f'<strong><a href="{link}" target="_blank" style="color:#222;text-decoration:none;">{title}</a></strong>'
-            f'<div style="font-size:12px;color:#555;margin-top:4px;">{summary_he}</div>'
+            f'<div style="font-size:12px;color:#555;margin-top:4px;">{summary}</div>'
             f'<div style="font-size:11px;color:#888;margin-top:4px;">{source} | {ts}</div>'
             f'</div>',
             unsafe_allow_html=True
