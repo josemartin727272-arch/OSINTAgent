@@ -208,6 +208,26 @@ def _matches_low_rated_pattern(text: str, patterns: set) -> bool:
     return hits >= 2
 
 
+def _detect_org(text: str, organizations: list) -> str:
+    """Return the name of the first organization whose name or keyword appears in the text."""
+    text_lower = text.lower()
+    for org in organizations or []:
+        name = str(org.get("name", "")).strip()
+        if not name or len(name) < 4:
+            continue
+        if name.lower() in text_lower:
+            return name
+        raw_kws = org.get("keywords", [])
+        if isinstance(raw_kws, list):
+            kws = raw_kws
+        else:
+            kws = [k.strip() for k in str(raw_kws).split(",") if k.strip()]
+        for kw in kws:
+            if len(kw) > 4 and kw.lower() in text_lower:
+                return name
+    return ""
+
+
 def _detect_global_location(text: str) -> str:
     for city in GLOBAL_CITIES:
         if city.lower() in text:
@@ -216,9 +236,17 @@ def _detect_global_location(text: str) -> str:
 
 
 def analyze_article(article: dict, keywords: dict, country: str = "Peru",
-                    threshold: int = 6, feedback: dict = None) -> dict:
+                    threshold: int = 6, feedback: dict = None,
+                    organizations: list = None) -> dict:
     text = _text(article)
     is_global = article.get("org_name") == "🌍 Global"
+
+    detected_org = article.get("org_name", "") or ""
+    if not is_global and detected_org in ("", "General") and organizations:
+        match = _detect_org(text, organizations)
+        if match:
+            detected_org = match
+            article = {**article, "org_name": detected_org}
 
     if not is_global and not _is_peru_relevant(text, country):
         return {
@@ -282,10 +310,12 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
 
 
 def analyze_all(articles: list, keywords: dict, country: str = "Peru",
-                threshold: int = 6, feedback: dict = None) -> list:
+                threshold: int = 6, feedback: dict = None,
+                organizations: list = None) -> list:
     results = []
     for i, article in enumerate(articles):
-        enriched = analyze_article(article, keywords, country, threshold, feedback)
+        enriched = analyze_article(article, keywords, country, threshold,
+                                   feedback, organizations)
         score = enriched.get("relevance_score", 0)
         print(f"[analyzer] {i+1}/{len(articles)} score={score}: {article.get('title','')[:60]}")
         if score > 0:

@@ -75,7 +75,8 @@ def run():
         return
 
     # 5. Analyze
-    results = analyze_all(articles, keywords, country, threshold, feedback)
+    results = analyze_all(articles, keywords, country, threshold, feedback,
+                          organizations=organizations)
     print(f"[main] Relevant: {len(results)}")
 
     # 6. Save

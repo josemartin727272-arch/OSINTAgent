@@ -178,6 +178,13 @@ UI_TEXT = {
         "col_count":           "כמות",
         "col_pct":             "אחוז",
         "total_in_period":     "סה\"כ {n} כתבות בתקופה זו",
+        "no_org_data_use_source": "אין נתוני ארגון — מציג לפי מקור",
+        "no_lang_data":        "נתוני שפה יתווספו לכתבות החדשות",
+        "data_quality_title":  "📋 איכות הנתונים",
+        "with_org":            "עם זיהוי ארגון",
+        "with_ai":              "עם ניקוד AI",
+        "with_rating":         "כתבות מדורגות",
+        "with_location":       "עם מיקום",
     },
     "en": {
         "title":         "🔍 OSINTAgent",
@@ -322,6 +329,13 @@ UI_TEXT = {
         "col_count":           "Count",
         "col_pct":             "Pct",
         "total_in_period":     "{n} articles in this period",
+        "no_org_data_use_source": "No org data — showing by source",
+        "no_lang_data":        "Language data will appear in new articles",
+        "data_quality_title":  "📋 Data Quality",
+        "with_org":            "With org identified",
+        "with_ai":             "With AI score",
+        "with_rating":         "Rated articles",
+        "with_location":       "With location",
     },
     "es": {
         "title":         "🔍 OSINTAgent",
@@ -466,6 +480,13 @@ UI_TEXT = {
         "col_count":           "Cantidad",
         "col_pct":             "%",
         "total_in_period":     "{n} artículos en este período",
+        "no_org_data_use_source": "Sin datos de organización — mostrando por fuente",
+        "no_lang_data":        "Los datos de idioma aparecerán en artículos nuevos",
+        "data_quality_title":  "📋 Calidad de Datos",
+        "with_org":            "Con organización",
+        "with_ai":             "Con puntuación AI",
+        "with_rating":         "Artículos valorados",
+        "with_location":       "Con ubicación",
     },
 }
 
@@ -1726,7 +1747,9 @@ def page_reports_new():
 
     with sc_right:
         st.markdown(f"**{t('by_language')}**")
-        if "lang" in df.columns:
+        if "lang" not in df.columns or df["lang"].isna().all() or (df["lang"].astype(str).str.strip() == "").all():
+            st.info(t("no_lang_data"))
+        else:
             lang_counts = df["lang"].dropna().replace("", pd.NA).dropna().value_counts()
             if not lang_counts.empty:
                 display = pd.Series(
@@ -1737,7 +1760,7 @@ def page_reports_new():
                 for code, cnt in lang_counts.items():
                     st.caption(f"{_lang_display(code)}: {int(cnt)} ({cnt/total*100:.0f}%)")
             else:
-                st.info(t("no_data"))
+                st.info(t("no_lang_data"))
 
     st.markdown(f"**{t('active_feeds')}**")
     feeds_df = pd.DataFrame(PERU_RSS_FEEDS_DISPLAY, columns=["Name", "Domain", "Status"])
@@ -1751,8 +1774,15 @@ def page_reports_new():
 
     with oc1:
         st.markdown(f"**{t('top_orgs_label')}**")
-        org_counts = df["org_name"].dropna().replace("", pd.NA).dropna().value_counts().head(10)
-        prev_org_counts = df_prev["org_name"].dropna().value_counts() if not df_prev.empty else pd.Series(dtype=int)
+        _excluded_orgs = {"General", "general", "", "🌍 Global", "Social"}
+        df_real_orgs = df[~df["org_name"].astype(str).isin(_excluded_orgs)]
+        org_counts = (df_real_orgs["org_name"].dropna().replace("", pd.NA)
+                      .dropna().value_counts().head(10))
+        if org_counts.empty:
+            st.info(t("no_org_data_use_source"))
+            org_counts = df["source"].dropna().replace("", pd.NA).dropna().value_counts().head(10)
+        prev_org_counts = (df_prev["org_name"].dropna().value_counts()
+                           if not df_prev.empty else pd.Series(dtype=int))
         for org, count in org_counts.items():
             prev_cnt = int(prev_org_counts.get(org, 0))
             arrow = "↑" if count > prev_cnt else "↓" if count < prev_cnt else "→"
@@ -1856,6 +1886,36 @@ def page_reports_new():
 
     st.markdown("---")
 
+    # ── Data quality ────────────────────────────────────────────────────────
+    st.subheader(t("data_quality_title"))
+    q1, q2, q3, q4 = st.columns(4)
+
+    total = max(len(df), 1)
+    excluded = {"General", "general", "", "🌍 Global", "Social"}
+    has_org = int((~df["org_name"].astype(str).isin(excluded)).sum()) if "org_name" in df.columns else 0
+    q1.metric(t("with_org"), has_org, f"{has_org/total*100:.0f}%")
+
+    if "ai_score" in df.columns:
+        has_ai = int((df["ai_score"].astype(str).str.strip() != "").sum())
+    else:
+        has_ai = 0
+    q2.metric(t("with_ai"), has_ai)
+
+    if "rating" in df.columns:
+        rating_num = pd.to_numeric(df["rating"], errors="coerce").fillna(0)
+        has_rated = int((rating_num > 0).sum())
+    else:
+        has_rated = 0
+    q3.metric(t("with_rating"), has_rated)
+
+    if "location" in df.columns:
+        has_loc = int((df["location"].notna() & (df["location"].astype(str) != "")).sum())
+    else:
+        has_loc = 0
+    q4.metric(t("with_location"), has_loc, f"{has_loc/total*100:.0f}%")
+
+    st.markdown("---")
+
     # ── Section 5: Actions ──────────────────────────────────────────────────
     col_a, col_b, col_c = st.columns(3)
 
@@ -1875,9 +1935,13 @@ def page_reports_new():
                     st.error(f"{t('report_failed')}: {e}")
 
     with col_b:
-        export_cols = [c for c in ["timestamp", "title", "source", "relevance_score",
-                                   "event_type", "location", "org_name", "link"]
-                       if c in df.columns]
+        export_cols = [c for c in [
+            "timestamp", "org_name", "title", "link", "source", "published",
+            "lang", "relevance_score", "event_type", "location",
+            "summary_en", "summary_he", "summary_es",
+            "is_alert", "is_global", "ai_score", "ai_reason",
+            "score_method", "rating",
+        ] if c in df.columns]
         csv_data = df[export_cols].to_csv(index=False).encode("utf-8-sig")
         st.download_button(
             label=f"📥 {t('export_csv')}",
