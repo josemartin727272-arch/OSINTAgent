@@ -114,16 +114,18 @@ def scan_historical_gdelt(start_year: int = 2025, sleep_sec: float = 5.0) -> lis
 # ── Google News historical ──────────────────────────────────────────────────
 
 HISTORICAL_QUERIES = [
-    "protesta Lima Israel Palestina",
+    "Israel Perú",
+    "Palestina Lima",
+    "BDS Perú",
+    "protesta Israel Lima",
     "manifestación Lima Israel",
-    "BDS Peru Lima",
-    "boicot Israel Peru",
-    "marcha Lima Palestina",
-    "antisemitismo Peru",
-    "comunidad judía Lima Israel",
+    "boicot Israel Perú",
+    "comunidad judía Lima",
     "embajada Israel Lima",
-    "universidades Peru Palestina Israel",
-    "UNMSM Palestina protesta",
+    "antisemitismo Perú Lima",
+    "caricatura Israel Perú",
+    "universidades Perú Israel",
+    "Carlín Israel Perú",
 ]
 
 
@@ -295,7 +297,7 @@ def run_historical_scan(start_year: int = 2025, methods=None):
     results = analyze_all(
         all_articles, keywords,
         country=settings.get("country", "Peru"),
-        threshold=3,
+        threshold=2,
         feedback=None,
         organizations=None,
     )
