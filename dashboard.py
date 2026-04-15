@@ -650,7 +650,7 @@ def _render_finding_card(row, idx, with_rating=True):
         f'<div style="border-left:4px solid {border};background:{bg};'
         f'padding:12px 16px;margin-bottom:4px;border-radius:4px;">'
         f'{score_badge(score_val)} &nbsp; '
-        f'<strong><a href="{link}" target="_blank" style="color:#333;text-decoration:none;">{title[:120]}</a></strong>'
+        f'<strong><a href="{link}" target="_blank" rel="noopener noreferrer" style="color:#333;text-decoration:none;">{title[:120]}</a></strong>'
         f'{"&nbsp; 🔔" if is_alert else ""}'
         f'<br><span style="color:#888;font-size:12px;">📰 {source} &nbsp;|&nbsp; 📅 {ts} &nbsp;|&nbsp; '
         f'🏢 {org} &nbsp;|&nbsp; {event_label(etype)} &nbsp;|&nbsp; 📍 {loc}</span>'
@@ -706,7 +706,7 @@ def _render_global_card(row):
     st.markdown(
         f'<div style="border-left:4px solid #2980b9;background:#1a2a3a;'
         f'color:white;padding:12px 16px;margin-bottom:8px;border-radius:4px;">'
-        f'🌍 <strong><a href="{link}" target="_blank" style="color:#9ecbff;text-decoration:none;">{title}</a></strong>'
+        f'🌍 <strong><a href="{link}" target="_blank" rel="noopener noreferrer" style="color:#9ecbff;text-decoration:none;">{title}</a></strong>'
         f'&nbsp;<span style="background:#2980b9;padding:1px 8px;border-radius:10px;font-size:11px;">{score:.0f}/10</span><br>'
         f'<span style="font-size:12px;opacity:.8;">📍 {loc} | {source} | {ts}</span><br>'
         f'<span style="font-size:12px;">{summary}</span>'
@@ -880,7 +880,7 @@ def page_home():
                 f'<span style="background:{color};color:white;padding:1px 8px;border-radius:10px;'
                 f'font-size:12px;font-weight:bold;">{s:.0f}</span> '
                 f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span> '
-                f'<a href="{link}" target="_blank" style="color:#222;text-decoration:none;font-weight:600;">{title}</a>'
+                f'<a href="{link}" target="_blank" rel="noopener noreferrer" style="color:#222;text-decoration:none;font-weight:600;">{title}</a>'
                 f'<br><span style="font-size:11px;color:#888;">{source} | {ts}</span>'
                 f'<br><span style="font-size:12px;color:#555;">{summary}</span>'
                 f'</div>',
@@ -966,7 +966,7 @@ def page_review():
     st.markdown(
         f'<div style="border:2px solid {color};border-radius:8px;padding:14px 16px;margin-bottom:14px;background:#fff;">'
         f'<span style="background:{color};color:white;padding:3px 12px;border-radius:12px;font-weight:bold;">{score:.0f}/10</span>'
-        f'&nbsp;&nbsp;<strong style="font-size:16px;"><a href="{link}" target="_blank" style="color:#222;text-decoration:none;">{title}</a></strong>'
+        f'&nbsp;&nbsp;<strong style="font-size:16px;"><a href="{link}" target="_blank" rel="noopener noreferrer" style="color:#222;text-decoration:none;">{title}</a></strong>'
         f'<div style="color:#777;font-size:12px;margin-top:6px;">📰 {source} | 📅 {ts} | 🏢 {org} | 📍 {loc}</div>'
         f'<div style="font-size:13px;color:#444;margin-top:8px;">{summary}</div>'
         f'</div>',
@@ -1076,7 +1076,7 @@ def page_feed():
             f'&nbsp;<span style="color:#daa520;">{"⭐" * rating}</span> '
             f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span>&nbsp;'
             f'<span style="font-size:12px;color:#777;">📍 {loc}</span><br>'
-            f'<strong><a href="{link}" target="_blank" style="color:#222;text-decoration:none;">{title}</a></strong>'
+            f'<strong><a href="{link}" target="_blank" rel="noopener noreferrer" style="color:#222;text-decoration:none;">{title}</a></strong>'
             f'<div style="font-size:12px;color:#555;margin-top:4px;">{summary}</div>'
             f'<div style="font-size:11px;color:#888;margin-top:4px;">{source} | {ts}</div>'
             f'</div>',
@@ -1187,7 +1187,9 @@ def page_organizations():
                     col1, col2 = st.columns([3, 1])
                     with col1:
                         if url:
-                            st.markdown(f"🔗 [{url}]({url})")
+                            st.markdown(
+                                f'🔗 <a href="{url}" target="_blank" rel="noopener noreferrer">{url}</a>',
+                                unsafe_allow_html=True)
                         if kws:
                             st.caption(f"🔑 {kws}")
                         if notes:

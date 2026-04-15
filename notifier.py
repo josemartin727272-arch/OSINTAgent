@@ -75,7 +75,7 @@ def _build_alert_card(a: dict) -> str:
             <span style="color:#555;font-size:13px">{event_type} | {location}</span>
         </div>
         <h3 style="margin:0 0 6px 0;font-size:15px;">
-            <a href="{link}" style="color:{color};text-decoration:none;">{title}</a>
+            <a href="{link}" target="_blank" rel="noopener noreferrer" style="color:{color};text-decoration:none;">{title}</a>
         </h3>
         <p style="margin:0 0 10px 0;color:#777;font-size:12px;">
             📰 {source} &nbsp;|&nbsp; 📅 {published[:22] if published else "—"}
@@ -84,7 +84,7 @@ def _build_alert_card(a: dict) -> str:
         <div style="background:#f9f9f9;padding:10px;border-radius:4px;font-size:13px;color:#444;margin-bottom:10px;">
             {summary_raw}
         </div>
-        <a href="{link}" style="display:inline-block;background:{color};color:white;padding:8px 16px;
+        <a href="{link}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:{color};color:white;padding:8px 16px;
                                 border-radius:4px;text-decoration:none;font-size:13px;font-weight:bold;">
             🔗 פתח כתבה
         </a>
@@ -131,7 +131,7 @@ def _build_summary_html(records: list, period_label: str, period_he: str) -> str
         top_rows += f"""<tr>
             <td style="padding:6px;border-bottom:1px solid #eee;font-size:12px;">{r.get('timestamp','')[:16]}</td>
             <td style="padding:6px;border-bottom:1px solid #eee;font-size:12px;">
-                <a href="{r.get('link','')}" style="color:#333;">{str(r.get('title',''))[:70]}...</a>
+                <a href="{r.get('link','')}" target="_blank" rel="noopener noreferrer" style="color:#333;">{str(r.get('title',''))[:70]}...</a>
             </td>
             <td style="padding:6px;border-bottom:1px solid #eee;text-align:center;">
                 <span style="background:{color};color:white;padding:2px 8px;border-radius:10px;font-size:12px;">{score}</span>
