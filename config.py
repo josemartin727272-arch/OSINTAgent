@@ -66,7 +66,7 @@ COUNTRY_PRESETS = {
 RESULTS_HEADERS = [
     "timestamp", "org_name", "title", "link", "source", "published",
     "lang", "relevance_score", "event_type", "event_date", "location",
-    "summary_he", "summary_en", "is_alert",
+    "summary_he", "summary_en", "is_alert", "is_global",
 ]
 
 KEYWORDS_HEADERS = ["keyword", "weight", "active"]

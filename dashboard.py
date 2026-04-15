@@ -193,6 +193,20 @@ EVENT_TYPE_LABELS = {
     "none":            {"he": "—",                  "en": "—",                "es": "—"},
 }
 
+PERU_CITIES = {
+    "Lima":      "🏙️ לימה",
+    "Cusco":     "🏔️ קוסקו",
+    "Arequipa":  "🌋 ארקיפה",
+    "Trujillo":  "🎭 טרוחיו",
+    "Chiclayo":  "🌿 צ'יקלאיו",
+    "Piura":     "☀️ פיורה",
+    "Ayacucho":  "⛪ איאקוצ'ו",
+    "Puno":      "🎵 פונו",
+    "Huancayo":  "🏞️ ואנקאיו",
+    "אחר":       "📍 ערים אחרות",
+}
+
+
 COUNTRY_PRESETS = {
     "Peru": "PE", "Argentina": "AR", "Chile": "CL", "Colombia": "CO",
     "Mexico": "MX", "Brazil": "BR", "Spain": "ES", "United States": "US",
@@ -347,6 +361,209 @@ def render_sidebar():
 
 # ─── Page: Findings ───────────────────────────────────────────────────────────
 
+def _render_finding_card(row, idx, with_rating=True):
+    score = row.get("relevance_score", 0)
+    try:
+        score_val = float(score)
+    except Exception:
+        score_val = 0
+
+    bg = "#fff5f5" if score_val >= 8 else "#fff9f0" if score_val >= 6 else "#ffffff"
+    border = "#cc0000" if score_val >= 8 else "#e67e00" if score_val >= 6 else "#dddddd"
+
+    title = str(row.get("title", ""))
+    link  = str(row.get("link", ""))
+    source = str(row.get("source", ""))
+    ts = str(row.get("timestamp", ""))[:16]
+    org = str(row.get("org_name", ""))
+    etype = str(row.get("event_type", ""))
+    loc = str(row.get("location", ""))
+    summary_he = str(row.get("summary_he", ""))
+    is_alert = str(row.get("is_alert", "")).upper() == "YES"
+    current_rating = int(row.get("rating", 0)) if str(row.get("rating", "")).isdigit() else 0
+
+    st.markdown(
+        f'<div style="border-left:4px solid {border};background:{bg};'
+        f'padding:12px 16px;margin-bottom:4px;border-radius:4px;">'
+        f'{score_badge(score_val)} &nbsp; '
+        f'<strong><a href="{link}" target="_blank" style="color:#333;text-decoration:none;">{title[:120]}</a></strong>'
+        f'{"&nbsp; 🔔" if is_alert else ""}'
+        f'<br><span style="color:#888;font-size:12px;">📰 {source} &nbsp;|&nbsp; 📅 {ts} &nbsp;|&nbsp; '
+        f'🏢 {org} &nbsp;|&nbsp; {event_label(etype)} &nbsp;|&nbsp; 📍 {loc}</span>'
+        f'<br><span style="font-size:12px;color:#555;">{summary_he}</span>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
+    if not with_rating:
+        return
+
+    stars_label = {0: "לא דורג", 1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐"}
+    col_r1, col_r2, col_r3, col_r4, col_r5, col_cur = st.columns([1,1,1,1,1,4])
+    for star, col in zip([1,2,3,4,5], [col_r1,col_r2,col_r3,col_r4,col_r5]):
+        btn_label = "⭐" if star <= current_rating else "☆"
+        if col.button(btn_label, key=f"rate_{idx}_{star}"):
+            try:
+                client = get_gspread_client()
+                if client:
+                    ws = client.open_by_key(SPREADSHEET_ID).worksheet("Results")
+                    all_vals = ws.get_all_values()
+                    headers = all_vals[0] if all_vals else []
+                    if "rating" not in headers:
+                        ws.update_cell(1, len(headers)+1, "rating")
+                        rating_col = len(headers)+1
+                    else:
+                        rating_col = headers.index("rating") + 1
+                    for r_idx, r_row in enumerate(all_vals[1:], start=2):
+                        link_col = headers.index("link") if "link" in headers else 3
+                        if len(r_row) > link_col and r_row[link_col] == link:
+                            ws.update_cell(r_idx, rating_col, star)
+                            break
+                    st.cache_data.clear()
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Rating save failed: {e}")
+    if current_rating > 0:
+        col_cur.caption(f"דירוג: {stars_label[current_rating]}")
+    st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
+
+
+def _render_global_events(df: pd.DataFrame):
+    st.markdown("### 🌍 אירועים גלובליים בולטים")
+
+    if "is_global" not in df.columns or "relevance_score" not in df.columns:
+        st.info("✅ אין אירועים גלובליים חריגים ב-48 שעות האחרונות")
+        return
+
+    df = df.copy()
+    df["relevance_score"] = pd.to_numeric(df["relevance_score"], errors="coerce").fillna(0)
+    df["_ts"] = pd.to_datetime(df.get("timestamp", "").astype(str).str[:16],
+                               format="%Y-%m-%d %H:%M", errors="coerce")
+    cutoff = pd.Timestamp.now() - pd.Timedelta(hours=48)
+
+    gdf = df[
+        (df["is_global"].astype(str).str.upper() == "YES") &
+        (df["relevance_score"] >= 7) &
+        (df["_ts"] >= cutoff)
+    ].sort_values("_ts", ascending=False)
+
+    if gdf.empty:
+        st.info("✅ אין אירועים גלובליים חריגים ב-48 שעות האחרונות")
+        return
+
+    for _, row in gdf.iterrows():
+        title = str(row.get("title", ""))[:140]
+        link  = str(row.get("link", ""))
+        source = str(row.get("source", ""))
+        ts = str(row.get("timestamp", ""))[:16]
+        loc = str(row.get("location", "") or "—")
+        summary_he = str(row.get("summary_he", ""))[:160]
+        st.markdown(
+            f'<div style="border-left:4px solid #2980b9;background:#1a2a3a;'
+            f'color:white;padding:12px 16px;margin-bottom:8px;border-radius:4px;">'
+            f'🌍 <strong><a href="{link}" target="_blank" style="color:#9ecbff;text-decoration:none;">{title}</a></strong><br>'
+            f'<span style="font-size:12px;opacity:.8;">📍 {loc} | {source} | {ts}</span><br>'
+            f'<span style="font-size:12px;">{summary_he}</span>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+
+def _render_top_recent(df: pd.DataFrame, n: int = 10):
+    st.markdown("### 🔥 10 הידיעות האחרונות")
+    if "timestamp" not in df.columns:
+        st.info(t("no_data"))
+        return
+    df_sorted = df.copy()
+    df_sorted["_ts"] = pd.to_datetime(df_sorted["timestamp"].astype(str).str[:16],
+                                      format="%Y-%m-%d %H:%M", errors="coerce")
+    df_sorted = df_sorted.sort_values("_ts", ascending=False).head(n)
+
+    for _, row in df_sorted.iterrows():
+        try:
+            s = float(row.get("relevance_score", 0) or 0)
+        except Exception:
+            s = 0
+        color = "#cc0000" if s >= 8 else "#e67e00" if s >= 6 else "#888"
+        title = str(row.get("title", ""))[:110]
+        link = str(row.get("link", ""))
+        source = str(row.get("source", ""))
+        ts = str(row.get("timestamp", ""))[:16]
+        etype = str(row.get("event_type", ""))
+        summary_he = str(row.get("summary_he", ""))[:80]
+        st.markdown(
+            f'<div style="padding:6px 10px;margin-bottom:3px;border-radius:4px;background:#fafafa;">'
+            f'<span style="background:{color};color:white;padding:1px 8px;border-radius:10px;'
+            f'font-size:12px;font-weight:bold;">{s:.0f}</span> '
+            f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span> '
+            f'<a href="{link}" target="_blank" style="color:#222;text-decoration:none;font-weight:600;">{title}</a>'
+            f' — <span style="font-size:11px;color:#888;">{source} | {ts}</span>'
+            f'<br><span style="font-size:11px;color:#777;">{summary_he}</span>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+    st.markdown(
+        '<a href="#full-list" style="display:inline-block;background:#2980b9;color:white;'
+        'padding:4px 12px;border-radius:4px;text-decoration:none;font-size:12px;margin-top:4px;">הצג הכל ↓</a>',
+        unsafe_allow_html=True
+    )
+
+
+def _render_peru_geo(df: pd.DataFrame):
+    st.markdown("### 🗺️ פריסה גיאוגרפית — פרו")
+
+    if "location" not in df.columns:
+        st.info(t("no_data"))
+        return
+
+    df = df.copy()
+    df["_ts"] = pd.to_datetime(df.get("timestamp", "").astype(str).str[:16],
+                               format="%Y-%m-%d %H:%M", errors="coerce")
+    recent_cutoff = pd.Timestamp.now() - pd.Timedelta(days=7)
+
+    named_cities = [c for c in PERU_CITIES.keys() if c != "אחר"]
+    unknown_label = "אחר"
+
+    def bucket_for(loc_val):
+        loc_str = str(loc_val).strip()
+        if not loc_str or loc_str.lower() in ("nan", "none"):
+            return None
+        for city in named_cities:
+            if city.lower() in loc_str.lower():
+                return city
+        return unknown_label
+
+    df["_bucket"] = df["location"].apply(bucket_for)
+    df_city = df[df["_bucket"].notna()]
+
+    for city, label in PERU_CITIES.items():
+        sub = df_city[df_city["_bucket"] == city]
+        if sub.empty:
+            continue
+        is_active = (sub["_ts"] >= recent_cutoff).any()
+        badge = " 🟢 <span style='color:#27ae60;font-size:12px;'>פעיל</span>" if is_active else ""
+        header = f"{label} — {len(sub)} כתבות{badge}"
+        with st.expander(header):
+            latest = sub.sort_values("_ts", ascending=False).head(5)
+            for i, row in enumerate(latest.iterrows()):
+                _, r = row
+                _render_finding_card(r, idx=f"geo_{city}_{i}", with_rating=False)
+
+    no_loc = df[df["_bucket"].isna()]
+    if not no_loc.empty:
+        with st.expander(f"📍 לא זוהה מיקום — {len(no_loc)} כתבות"):
+            latest = no_loc.sort_values("_ts", ascending=False).head(5)
+            for i, row in enumerate(latest.iterrows()):
+                _, r = row
+                _render_finding_card(r, idx=f"geo_none_{i}", with_rating=False)
+
+    counts_series = df_city[df_city["_bucket"] != unknown_label]["_bucket"].value_counts().head(10)
+    if not counts_series.empty:
+        st.markdown("**סיכום — 10 הערים המובילות**")
+        st.bar_chart(counts_series)
+
+
 def page_findings():
     st.header(t("page_findings"))
 
@@ -357,7 +574,38 @@ def page_findings():
         st.info(t("no_data"))
         return
 
+    # ── KPI row (all data) ──────────────────────────────────────────────────
+    df_kpi = df.copy()
+    if "relevance_score" in df_kpi.columns:
+        df_kpi["relevance_score"] = pd.to_numeric(df_kpi["relevance_score"], errors="coerce").fillna(0)
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric(t("total"), len(df_kpi))
+        alert_count = len(df_kpi[df_kpi["is_alert"].astype(str).str.upper() == "YES"]) if "is_alert" in df_kpi.columns else 0
+        c2.metric(t("alerts_count"), alert_count)
+        avg = df_kpi["relevance_score"].mean()
+        c3.metric(t("avg_score"), f"{avg:.1f}")
+        high = len(df_kpi[df_kpi["relevance_score"] >= 8])
+        c4.metric("🔴 Critical (8+)", high)
+
+    st.markdown("---")
+
+    # ── Global events ───────────────────────────────────────────────────────
+    _render_global_events(df)
+
+    st.markdown("---")
+
+    # ── Top 10 recent ───────────────────────────────────────────────────────
+    _render_top_recent(df, n=10)
+
+    st.markdown("---")
+
+    # ── Peru geographic layout ──────────────────────────────────────────────
+    _render_peru_geo(df)
+
+    st.markdown("---")
+
     # ── Filters ──────────────────────────────────────────────────────────────
+    st.markdown('<div id="full-list"></div>', unsafe_allow_html=True)
     with st.expander(f"🔍 {t('filters')}", expanded=True):
         col1, col2, col3, col4 = st.columns(4)
 
@@ -397,87 +645,11 @@ def page_findings():
 
     st.caption(f"מציג {len(filtered)} מתוך {len(df)} ממצאים")
 
-    # ── KPI row ──────────────────────────────────────────────────────────────
-    if not filtered.empty and "relevance_score" in filtered.columns:
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric(t("total"), len(filtered))
-        alert_count = len(filtered[filtered["is_alert"].astype(str).str.upper() == "YES"]) if "is_alert" in filtered.columns else 0
-        c2.metric(t("alerts_count"), alert_count)
-        avg = filtered["relevance_score"].mean()
-        c3.metric(t("avg_score"), f"{avg:.1f}")
-        high = len(filtered[filtered["relevance_score"] >= 8])
-        c4.metric("🔴 Critical (8+)", high)
-
     st.markdown("---")
 
-    # ── Table ─────────────────────────────────────────────────────────────────
+    # ── Full filtered list ──────────────────────────────────────────────────
     for idx, row in filtered.iterrows():
-        score = row.get("relevance_score", 0)
-        try:
-            score_val = float(score)
-        except Exception:
-            score_val = 0
-
-        bg = "#fff5f5" if score_val >= 8 else "#fff9f0" if score_val >= 6 else "#ffffff"
-        border = "#cc0000" if score_val >= 8 else "#e67e00" if score_val >= 6 else "#dddddd"
-
-        title = str(row.get("title", ""))
-        link  = str(row.get("link", ""))
-        source = str(row.get("source", ""))
-        ts = str(row.get("timestamp", ""))[:16]
-        org = str(row.get("org_name", ""))
-        etype = str(row.get("event_type", ""))
-        loc = str(row.get("location", ""))
-        summary_he = str(row.get("summary_he", ""))
-        is_alert = str(row.get("is_alert", "")).upper() == "YES"
-        current_rating = int(row.get("rating", 0)) if str(row.get("rating", "")).isdigit() else 0
-
-        with st.container():
-            st.markdown(
-                f'<div style="border-left:4px solid {border};background:{bg};'
-                f'padding:12px 16px;margin-bottom:4px;border-radius:4px;">'
-                f'{score_badge(score_val)} &nbsp; '
-                f'<strong><a href="{link}" target="_blank" style="color:#333;text-decoration:none;">{title[:120]}</a></strong>'
-                f'{"&nbsp; 🔔" if is_alert else ""}'
-                f'<br><span style="color:#888;font-size:12px;">📰 {source} &nbsp;|&nbsp; 📅 {ts} &nbsp;|&nbsp; '
-                f'🏢 {org} &nbsp;|&nbsp; {event_label(etype)} &nbsp;|&nbsp; 📍 {loc}</span>'
-                f'<br><span style="font-size:12px;color:#555;">{summary_he}</span>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-
-            # ── Star rating ───────────────────────────────────────────────
-            stars_label = {0: "לא דורג", 1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐"}
-            col_r1, col_r2, col_r3, col_r4, col_r5, col_cur = st.columns([1,1,1,1,1,4])
-            for star, col in zip([1,2,3,4,5], [col_r1,col_r2,col_r3,col_r4,col_r5]):
-                btn_label = "⭐" if star <= current_rating else "☆"
-                if col.button(btn_label, key=f"rate_{idx}_{star}"):
-                    # Save rating to Sheets
-                    try:
-                        client = get_gspread_client()
-                        if client:
-                            ws = client.open_by_key(SPREADSHEET_ID).worksheet("Results")
-                            all_vals = ws.get_all_values()
-                            headers = all_vals[0] if all_vals else []
-                            # Add rating column if missing
-                            if "rating" not in headers:
-                                ws.update_cell(1, len(headers)+1, "rating")
-                                rating_col = len(headers)+1
-                            else:
-                                rating_col = headers.index("rating") + 1
-                            # Find the row by link
-                            for r_idx, r_row in enumerate(all_vals[1:], start=2):
-                                link_col = headers.index("link") if "link" in headers else 3
-                                if len(r_row) > link_col and r_row[link_col] == link:
-                                    ws.update_cell(r_idx, rating_col, star)
-                                    break
-                            st.cache_data.clear()
-                            st.rerun()
-                    except Exception as e:
-                        st.error(f"Rating save failed: {e}")
-            if current_rating > 0:
-                col_cur.caption(f"דירוג: {stars_label[current_rating]}")
-            st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
+        _render_finding_card(row, idx=idx, with_rating=True)
 
 
 # ─── Page: Organizations ──────────────────────────────────────────────────────

@@ -41,6 +41,23 @@ FACEBOOK_PAGES = [
     "BDS Perú",
 ]
 
+GLOBAL_ANTI_ISRAEL_QUERIES = [
+    "protest Israeli embassy London",
+    "protest Israeli embassy Paris",
+    "protest Israeli embassy Berlin",
+    "protest Israeli embassy Washington",
+    "protest Israeli embassy Madrid",
+    "protest Israeli embassy Rome",
+    "manifestación embajada Israel",
+    "massive BDS protest",
+    "large Palestine rally",
+    "Palestine demonstration thousands",
+    "Israel attack protest global",
+    "attack Israel embassy",
+    "Israeli diplomat attack",
+    "boycott Israel international",
+]
+
 SOCIAL_KEYWORD_QUERIES = [
     "Facebook Palestine Peru protesta",
     "Instagram Palestine Peru manifestación",
@@ -99,6 +116,20 @@ def _fetch_query(query: str, org_name: str, seen_urls: set,
     return articles
 
 
+def fetch_global_events(seen_urls: set, languages: list = None) -> list:
+    """Global anti-Israel events (embassy protests, mass rallies). English-only."""
+    articles = []
+    for query in GLOBAL_ANTI_ISRAEL_QUERIES:
+        results = _fetch_query(query, "🌍 Global", seen_urls,
+                               languages=["en"], country_code="US",
+                               country_filter=False, country_name=None)
+        if results:
+            print(f"[scanner] [global] '{query}' → {len(results)}")
+        articles.extend(results)
+    print(f"[scanner] Global events total: {len(articles)}")
+    return articles
+
+
 def fetch_social_media_orgs(seen_urls: set, languages: list,
                             country_code: str, country_name: str = "Peru") -> list:
     """Scan Google News for mentions of known pro-Palestine social accounts in the target country."""
@@ -145,6 +176,10 @@ def fetch_all_articles(organizations: list, keywords: dict,
         all_articles.extend(results)
 
     print(f"[scanner] Keyword total: {len(all_articles)}")
+
+    # Global anti-Israel events (embassy protests, mass rallies)
+    global_events = fetch_global_events(seen_urls, languages)
+    all_articles.extend(global_events)
 
     # Social-media oriented keyword queries
     for query in SOCIAL_KEYWORD_QUERIES:

@@ -31,7 +31,10 @@ LOCATION_KEYWORDS = {
 }
 
 CITY_KEYWORDS = {
-    "Peru":      ["Lima", "Cusco", "Arequipa", "Trujillo", "Piura", "Iquitos", "Huancayo", "Puno", "Chiclayo"],
+    "Peru":      ["Lima", "Cusco", "Arequipa", "Trujillo", "Piura",
+                  "Iquitos", "Huancayo", "Puno", "Chiclayo", "Tacna",
+                  "Juliaca", "Ayacucho", "Cajamarca", "Ica", "Huaraz",
+                  "Moquegua", "Tumbes", "Pucallpa", "Tarapoto", "Chimbote"],
     "Argentina": ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "Tucumán"],
     "Chile":     ["Santiago", "Valparaíso", "Concepción", "Antofagasta"],
     "Colombia":  ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena"],
@@ -53,6 +56,19 @@ EVENT_TYPES = {
     "online_campaign": ["campaña", "campaign", "redes sociales", "publicación", "קמפיין"],
     "statement":     ["declaración", "denuncia", "condena", "statement", "condemn", "גינוי", "הצהרה"],
 }
+
+GLOBAL_CITIES = [
+    "London", "Paris", "Berlin", "Madrid", "Rome",
+    "New York", "Washington", "Sydney", "Toronto",
+    "Amsterdam", "Brussels", "Stockholm", "Oslo",
+]
+
+MASS_EVENT_KEYWORDS = [
+    "thousands", "hundreds of thousands", "massive", "huge rally",
+    "miles de", "masiva", "gran marcha", "multitudinaria",
+    "embassy", "embajada", "שגרירות",
+]
+
 
 EVENT_TYPE_LABELS = {
     "he": {
@@ -173,11 +189,19 @@ def _matches_low_rated_pattern(text: str, patterns: set) -> bool:
     return hits >= 2
 
 
+def _detect_global_location(text: str) -> str:
+    for city in GLOBAL_CITIES:
+        if city.lower() in text:
+            return city
+    return None
+
+
 def analyze_article(article: dict, keywords: dict, country: str = "Peru",
                     threshold: int = 6, feedback: dict = None) -> dict:
     text = _text(article)
+    is_global = article.get("org_name") == "🌍 Global"
 
-    if not _is_peru_relevant(text, country):
+    if not is_global and not _is_peru_relevant(text, country):
         return {
             **article,
             "relevance_score": 0,
@@ -187,6 +211,7 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
             "summary_en":      "",
             "summary_he":      "",
             "is_alert":        False,
+            "is_global":       False,
         }
 
     country_kws = LOCATION_KEYWORDS.get(country, [country])
@@ -194,9 +219,14 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
     high   = _count(text, keywords.get("high", []))   * 3
     medium = _count(text, keywords.get("medium", [])) * 2
     low    = _count(text, keywords.get("low", []))    * 1
+    keyword_score = high + medium + low
     country_bonus = 2 if any(kw.lower() in text for kw in country_kws) else 0
 
-    score = high + medium + low + country_bonus
+    if is_global:
+        global_bonus = 2 if any(kw in text for kw in MASS_EVENT_KEYWORDS) else 0
+        score = keyword_score + global_bonus
+    else:
+        score = keyword_score + country_bonus
 
     if feedback:
         high_value_orgs    = feedback.get("high_value_orgs", set())
@@ -215,7 +245,7 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
 
     score      = min(10, score)
     event_type = _detect_event_type(text) if score > 0 else "none"
-    location   = _detect_location(text, country)
+    location   = _detect_global_location(text) if is_global else _detect_location(text, country)
 
     return {
         **article,
@@ -226,6 +256,7 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
         "summary_en": f"{article.get('title','')} (Source: {article.get('source','')}). Score: {score}/10.",
         "summary_he": f"זוהה {get_event_label(event_type,'he')} במיקום: {location or 'לא ידוע'}. כותרת: {article.get('title','')}",
         "is_alert":   score >= threshold,
+        "is_global":  is_global,
     }
 
 

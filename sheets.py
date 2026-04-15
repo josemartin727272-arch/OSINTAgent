@@ -239,6 +239,7 @@ def save_results(results: list[dict]) -> None:
             r.get("summary_he", ""),
             r.get("summary_en", ""),
             "YES" if r.get("is_alert") else "no",
+            "YES" if r.get("is_global") else "no",
         ])
     ws.append_rows(rows, value_input_option='RAW', table_range='A1')
     print(f"[sheets] Saved {len(rows)} results")
