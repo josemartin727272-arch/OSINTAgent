@@ -1036,30 +1036,38 @@ def page_review():
     df["_rating_int"] = df["rating"].apply(lambda x: int(x) if str(x).strip().isdigit() else 0)
     df["relevance_score"] = pd.to_numeric(df.get("relevance_score", 0), errors="coerce").fillna(0)
 
-    unrated = df[df["_rating_int"] == 0].sort_values("relevance_score", ascending=False)
-    rated_today = df[df["_rating_int"] > 0]
-    total = len(df)
-    done  = len(rated_today)
-
-    st.caption(t("pending_count").format(n=len(unrated)))
-    if total:
-        st.progress(min(1.0, done / total),
-                    text=t("rated_today").format(done=done, total=total))
-
-    # Filter skipped in session
     skipped = st.session_state.setdefault("review_skipped", set())
-    queue = unrated[~unrated["link"].astype(str).isin(skipped)]
+    pending = df[(df["_rating_int"] == 0) & (~df["link"].astype(str).isin(skipped))]
+    pending = pending.sort_values("relevance_score", ascending=False).reset_index(drop=True)
 
-    if queue.empty:
+    total_all     = len(df)
+    total_pending = len(pending)
+    rated_count   = int((df["_rating_int"] > 0).sum())
+
+    if total_pending == 0:
         st.success(t("no_pending"))
         return
 
-    row = queue.iloc[0]
-    idx = row.name
-    score = float(row.get("relevance_score", 0) or 0)
-    color = "#cc0000" if score >= 8 else "#e67e00" if score >= 6 else "#2980b9"
+    st.caption(t("pending_count").format(n=total_pending))
+    st.progress(min(1.0, rated_count / max(total_all, 1)),
+                text=t("rated_today").format(done=rated_count, total=total_all))
+
+    # Index tracked in session_state so we stay on this page after rerun
+    if "review_index" not in st.session_state:
+        st.session_state["review_index"] = 0
+    idx = st.session_state["review_index"]
+    if idx >= total_pending:
+        st.session_state["review_index"] = 0
+        idx = 0
+
+    row = pending.iloc[idx]
+    try:
+        score_val = float(row.get("relevance_score", 0) or 0)
+    except Exception:
+        score_val = 0
+    color = "#cc0000" if score_val >= 8 else "#e67e00" if score_val >= 6 else "#2980b9"
     title = str(row.get("title", ""))
-    link = str(row.get("link", ""))
+    link  = str(row.get("link", ""))
     source = str(row.get("source", ""))
     ts = str(row.get("timestamp", ""))[:16]
     org = str(row.get("org_name", ""))
@@ -1067,20 +1075,24 @@ def page_review():
     summary = get_summary(row)
 
     st.markdown(
-        f'<div style="border:2px solid {color};border-radius:8px;padding:14px 16px;margin-bottom:14px;background:#fff;">'
-        f'<span style="background:{color};color:white;padding:3px 12px;border-radius:12px;font-weight:bold;">{score:.0f}/10</span>'
-        f'&nbsp;&nbsp;<strong style="font-size:16px;"><a href="{link}" target="_blank" rel="noopener noreferrer" style="color:#222;text-decoration:none;">{title}</a></strong>'
-        f'<div style="color:#777;font-size:12px;margin-top:6px;">📰 {source} | 📅 {ts} | 🏢 {org} | 📍 {loc}</div>'
-        f'<div style="font-size:13px;color:#444;margin-top:8px;">{summary}</div>'
+        f'<div style="border:2px solid {color};border-radius:8px;padding:16px;margin-bottom:12px;">'
+        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        f'<span style="background:{color};color:white;padding:3px 10px;border-radius:12px;font-weight:bold;">{score_val:.0f}/10</span>'
+        f'<span style="font-size:12px;color:#888;">{idx+1} / {total_pending}</span>'
+        f'</div>'
+        f'<h3 style="margin:0 0 6px;font-size:15px;">'
+        f'<a href="{link}" target="_blank" rel="noopener noreferrer" style="color:{color};text-decoration:none;">{title[:120]}</a>'
+        f'</h3>'
+        f'<p style="margin:0 0 8px;color:#777;font-size:12px;">📰 {source} | 📅 {ts} | 🏢 {org} | 📍 {loc}</p>'
+        f'<p style="font-size:13px;">{summary[:300]}</p>'
         f'</div>',
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     cols = st.columns(6)
-    star_labels = ["⭐1", "⭐⭐2", "⭐⭐⭐3", "⭐⭐⭐⭐4", "⭐⭐⭐⭐⭐5", t("skip")]
+    star_labels = ["1 ⭐", "2 ⭐⭐", "3 ⭐⭐⭐", "4 ⭐⭐⭐⭐", "5 ⭐⭐⭐⭐⭐", t("skip")]
     for i, label in enumerate(star_labels):
-        key = f"review_{idx}_{i}"
-        if cols[i].button(label, key=key, use_container_width=True):
+        if cols[i].button(label, key=f"rate_btn_{idx}_{i}", use_container_width=True):
             if i < 5:
                 try:
                     _save_rating(link, i + 1)
@@ -1090,6 +1102,18 @@ def page_review():
             else:
                 skipped.add(link)
                 st.toast(t("skipped"))
+            st.session_state["review_index"] = idx + 1
+            st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    nav1, nav2, nav3 = st.columns([1, 3, 1])
+    with nav1:
+        if idx > 0 and st.button("◀", key=f"nav_prev_{idx}", use_container_width=True):
+            st.session_state["review_index"] = idx - 1
+            st.rerun()
+    with nav3:
+        if idx < total_pending - 1 and st.button("▶", key=f"nav_next_{idx}", use_container_width=True):
+            st.session_state["review_index"] = idx + 1
             st.rerun()
 
 
