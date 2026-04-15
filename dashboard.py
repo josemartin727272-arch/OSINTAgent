@@ -151,6 +151,33 @@ UI_TEXT = {
         "global_not_yet":      "עדיין לא נאספו אירועים גלובליים",
         "no_recent_location":  "אין כתבות ב-7 הימים האחרונים עם מיקום מזוהה",
         "nav_label":           "ניווט",
+        "report_page":         "📊 דוחות",
+        "report_geo_title":    "🗺️ פעילות גיאוגרפית",
+        "report_sources_title":"📰 מקורות ועיתונים",
+        "report_orgs_title":   "🏢 ארגונים פעילים",
+        "report_intel_title":  "🔍 אינטליגנציה מתקדמת",
+        "period_7d":           "7 ימים",
+        "period_30d":          "30 ימים",
+        "period_90d":          "90 ימים",
+        "vs_prev_period":      "לעומת תקופה מקבילה",
+        "peak_hour":           "שעת שיא",
+        "lima_time":           "שעון לימה",
+        "export_csv":          "ייצוא CSV",
+        "period_label":        "דוח תקופתי",
+        "active_feeds":        "RSS פעילים",
+        "avg_score_label":     "ציון ממוצע",
+        "top_cities_label":    "ערים מובילות",
+        "top_sources_label":   "עיתונים מובילים",
+        "by_language":         "חלוקה לפי שפה",
+        "top_orgs_label":      "ארגונים מובילים",
+        "platform_breakdown":  "חלוקה לפי פלטפורמה",
+        "hot_keywords":        "מילות מפתח חמות",
+        "weekday_activity":    "פעילות לפי יום בשבוע",
+        "trend_daily":         "מגמה יומית",
+        "col_city":            "עיר",
+        "col_count":           "כמות",
+        "col_pct":             "אחוז",
+        "total_in_period":     "סה\"כ {n} כתבות בתקופה זו",
     },
     "en": {
         "title":         "🔍 OSINTAgent",
@@ -268,6 +295,33 @@ UI_TEXT = {
         "global_not_yet":      "No global events collected yet",
         "no_recent_location":  "No located articles in the last 7 days",
         "nav_label":           "Navigation",
+        "report_page":         "📊 Reports",
+        "report_geo_title":    "🗺️ Geographic Activity",
+        "report_sources_title":"📰 Sources & Publications",
+        "report_orgs_title":   "🏢 Active Organizations",
+        "report_intel_title":  "🔍 Advanced Intelligence",
+        "period_7d":           "7 days",
+        "period_30d":          "30 days",
+        "period_90d":          "90 days",
+        "vs_prev_period":      "vs previous period",
+        "peak_hour":           "Peak hour",
+        "lima_time":           "Lima time",
+        "export_csv":          "Export CSV",
+        "period_label":        "Periodic Report",
+        "active_feeds":        "Active RSS feeds",
+        "avg_score_label":     "Avg score",
+        "top_cities_label":    "Top cities",
+        "top_sources_label":   "Top sources",
+        "by_language":         "Breakdown by language",
+        "top_orgs_label":      "Top organizations",
+        "platform_breakdown":  "Breakdown by platform",
+        "hot_keywords":        "Hot keywords",
+        "weekday_activity":    "Activity by weekday",
+        "trend_daily":         "Daily trend",
+        "col_city":            "City",
+        "col_count":           "Count",
+        "col_pct":             "Pct",
+        "total_in_period":     "{n} articles in this period",
     },
     "es": {
         "title":         "🔍 OSINTAgent",
@@ -385,6 +439,33 @@ UI_TEXT = {
         "global_not_yet":      "Aún no se han recolectado eventos globales",
         "no_recent_location":  "No hay artículos con ubicación en los últimos 7 días",
         "nav_label":           "Navegación",
+        "report_page":         "📊 Informes",
+        "report_geo_title":    "🗺️ Actividad Geográfica",
+        "report_sources_title":"📰 Fuentes y Publicaciones",
+        "report_orgs_title":   "🏢 Organizaciones Activas",
+        "report_intel_title":  "🔍 Inteligencia Avanzada",
+        "period_7d":           "7 días",
+        "period_30d":          "30 días",
+        "period_90d":          "90 días",
+        "vs_prev_period":      "vs período anterior",
+        "peak_hour":           "Hora pico",
+        "lima_time":           "hora Lima",
+        "export_csv":          "Exportar CSV",
+        "period_label":        "Informe periódico",
+        "active_feeds":        "Feeds RSS activos",
+        "avg_score_label":     "Puntuación media",
+        "top_cities_label":    "Ciudades principales",
+        "top_sources_label":   "Fuentes principales",
+        "by_language":         "División por idioma",
+        "top_orgs_label":      "Organizaciones principales",
+        "platform_breakdown":  "División por plataforma",
+        "hot_keywords":        "Palabras clave destacadas",
+        "weekday_activity":    "Actividad por día de la semana",
+        "trend_daily":         "Tendencia diaria",
+        "col_city":            "Ciudad",
+        "col_count":           "Cantidad",
+        "col_pct":             "%",
+        "total_in_period":     "{n} artículos en este período",
     },
 }
 
@@ -573,6 +654,7 @@ PAGE_ORDER = [
     ("page_review", "review"),
     ("page_feed",   "feed"),
     ("page_global", "global"),
+    ("report_page", "reports"),
     ("page_admin",  "admin"),
 ]
 
@@ -1500,6 +1582,315 @@ def page_reports():
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
+PERU_RSS_FEEDS_DISPLAY = [
+    ("La República", "larepublica.pe", "✅"),
+    ("RPP Noticias", "rpp.pe", "✅"),
+    ("Diario Correo", "diariocorreo.pe", "✅"),
+    ("El Peruano", "elperuano.pe", "✅"),
+    ("Hildebrandt", "hildebrandtensustrece.pe", "✅"),
+    ("El Salmón", "elsalmon.pe", "✅"),
+    ("Telesur", "telesurtv.net", "✅"),
+    ("RT Español", "actualidad.rt.com", "✅"),
+]
+
+LANG_NAMES = {
+    "he": {"he": "עברית",   "en": "Hebrew",   "es": "Hebreo"},
+    "en": {"he": "אנגלית",  "en": "English",  "es": "Inglés"},
+    "es": {"he": "ספרדית",  "en": "Spanish",  "es": "Español"},
+    "ar": {"he": "ערבית",   "en": "Arabic",   "es": "Árabe"},
+    "fr": {"he": "צרפתית",  "en": "French",   "es": "Francés"},
+    "pt": {"he": "פורטוגזית","en": "Portuguese","es": "Portugués"},
+    "de": {"he": "גרמנית",  "en": "German",   "es": "Alemán"},
+}
+
+
+def _lang_display(code: str) -> str:
+    ui = get_ui_lang()
+    return LANG_NAMES.get(code, {}).get(ui, code)
+
+
+def page_reports_new():
+    st.header(t("report_page"))
+
+    # Period selector
+    ct1, ct2, ct3, ct4 = st.columns(4)
+    if "report_days" not in st.session_state:
+        st.session_state["report_days"] = 30
+    current = st.session_state["report_days"]
+
+    def _period_btn(col, days, label):
+        if col.button(label, use_container_width=True,
+                      type="primary" if current == days else "secondary"):
+            st.session_state["report_days"] = days
+            st.rerun()
+
+    _period_btn(ct1, 7,    t("period_7d"))
+    _period_btn(ct2, 30,   t("period_30d"))
+    _period_btn(ct3, 90,   t("period_90d"))
+    _period_btn(ct4, 9999, t("period_all"))
+    period_days = st.session_state["report_days"]
+
+    df_all = load_sheet_data("Results")
+    if df_all.empty:
+        st.info(t("no_data"))
+        return
+
+    df_all = df_all.copy()
+    df_all["ts"] = pd.to_datetime(df_all.get("timestamp", "").astype(str).str[:16],
+                                  format="%Y-%m-%d %H:%M", errors="coerce")
+    df_all["relevance_score"] = pd.to_numeric(df_all.get("relevance_score", 0),
+                                              errors="coerce").fillna(0)
+
+    now = pd.Timestamp.now()
+    cutoff = now - pd.Timedelta(days=period_days)
+    df = df_all[df_all["ts"] >= cutoff] if period_days < 9999 else df_all
+    prev_start = cutoff - pd.Timedelta(days=period_days)
+    df_prev = df_all[(df_all["ts"] >= prev_start) & (df_all["ts"] < cutoff)]
+
+    if df.empty:
+        st.info(t("no_data"))
+        return
+
+    st.caption(t("total_in_period").format(n=len(df)))
+    st.markdown("---")
+
+    # ── Section 1: Geographic activity ─────────────────────────────────────
+    st.subheader(t("report_geo_title"))
+    gc_left, gc_right = st.columns(2)
+
+    with gc_left:
+        st.markdown(f"**{t('top_cities_label')}**")
+        city_counts = df["location"].dropna().replace("", pd.NA).dropna().value_counts().head(10)
+        if not city_counts.empty:
+            st.bar_chart(city_counts)
+            total = len(df)
+            table_rows = []
+            for city, cnt in city_counts.items():
+                avg = df[df["location"] == city]["relevance_score"].mean()
+                table_rows.append({
+                    t("col_city"): city,
+                    t("col_count"): int(cnt),
+                    t("col_pct"): f"{cnt/total*100:.0f}%",
+                    t("avg_score_label"): f"{avg:.1f}",
+                })
+            st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
+        else:
+            st.info(t("no_data"))
+
+    with gc_right:
+        st.markdown(f"**{t('event_types_chart')}**")
+        event_counts = df["event_type"].dropna().replace("", pd.NA).dropna().value_counts()
+        if not event_counts.empty:
+            event_df = pd.DataFrame({
+                "x": [event_label(k) for k in event_counts.index],
+                "n": event_counts.values,
+            })
+            st.bar_chart(event_df.set_index("x"))
+        else:
+            st.info(t("no_data"))
+
+    st.markdown(f"**{t('trend_daily')}**")
+    daily = df.dropna(subset=["ts"]).groupby(df["ts"].dt.date).size()
+    if not daily.empty:
+        st.line_chart(daily)
+    pct_change = ((len(df) - len(df_prev)) / max(len(df_prev), 1)) * 100
+    color = "🔴" if pct_change > 10 else "🟢" if pct_change < -10 else "🟡"
+    st.caption(f"{color} {pct_change:+.0f}% {t('vs_prev_period')}")
+
+    st.markdown("---")
+
+    # ── Section 2: Sources ──────────────────────────────────────────────────
+    st.subheader(t("report_sources_title"))
+    sc_left, sc_right = st.columns(2)
+
+    with sc_left:
+        st.markdown(f"**{t('top_sources_label')}**")
+        source_counts = df["source"].dropna().replace("", pd.NA).dropna().value_counts().head(10)
+        if not source_counts.empty:
+            max_count = int(source_counts.max())
+            for source, count in source_counts.items():
+                avg_score = df[df["source"] == source]["relevance_score"].mean()
+                pct = int(count / max_count * 100)
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+                    f'<span style="min-width:120px;font-size:13px;">{str(source)[:24]}</span>'
+                    f'<div style="flex:1;height:6px;background:#eee;border-radius:3px;">'
+                    f'<div style="width:{pct}%;height:100%;background:#378ADD;border-radius:3px;"></div>'
+                    f'</div>'
+                    f'<span style="font-size:12px;color:#666;">{int(count)} | ⌀{avg_score:.1f}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.info(t("no_data"))
+
+    with sc_right:
+        st.markdown(f"**{t('by_language')}**")
+        if "lang" in df.columns:
+            lang_counts = df["lang"].dropna().replace("", pd.NA).dropna().value_counts()
+            if not lang_counts.empty:
+                display = pd.Series(
+                    {_lang_display(code): cnt for code, cnt in lang_counts.items()}
+                )
+                st.bar_chart(display)
+                total = int(lang_counts.sum())
+                for code, cnt in lang_counts.items():
+                    st.caption(f"{_lang_display(code)}: {int(cnt)} ({cnt/total*100:.0f}%)")
+            else:
+                st.info(t("no_data"))
+
+    st.markdown(f"**{t('active_feeds')}**")
+    feeds_df = pd.DataFrame(PERU_RSS_FEEDS_DISPLAY, columns=["Name", "Domain", "Status"])
+    st.dataframe(feeds_df, use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+
+    # ── Section 3: Organizations ────────────────────────────────────────────
+    st.subheader(t("report_orgs_title"))
+    oc1, oc2, oc3 = st.columns(3)
+
+    with oc1:
+        st.markdown(f"**{t('top_orgs_label')}**")
+        org_counts = df["org_name"].dropna().replace("", pd.NA).dropna().value_counts().head(10)
+        prev_org_counts = df_prev["org_name"].dropna().value_counts() if not df_prev.empty else pd.Series(dtype=int)
+        for org, count in org_counts.items():
+            prev_cnt = int(prev_org_counts.get(org, 0))
+            arrow = "↑" if count > prev_cnt else "↓" if count < prev_cnt else "→"
+            arrow_color = "#cc0000" if arrow == "↑" else "#2980b9" if arrow == "↓" else "#888"
+            st.markdown(
+                f'<div style="padding:6px 10px;margin-bottom:4px;background:#fafafa;border-radius:4px;">'
+                f'<span style="font-size:13px;">{str(org)[:28]}</span>'
+                f'<span style="float:right;font-size:13px;">{int(count)} '
+                f'<span style="color:{arrow_color};">{arrow}</span></span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    with oc2:
+        st.markdown(f"**{t('avg_score_label')}**")
+        org_avg = (df.groupby("org_name")["relevance_score"].mean()
+                   .sort_values(ascending=False).head(8))
+        for org, avg in org_avg.items():
+            color = "#cc0000" if avg > 7 else "#e67e00" if avg > 5 else "#2980b9"
+            pct = min(100, int(avg / 10 * 100))
+            st.markdown(
+                f'<div style="margin-bottom:6px;">'
+                f'<div style="font-size:12px;">{str(org)[:26]} — <strong>{avg:.1f}</strong></div>'
+                f'<div style="height:6px;background:#eee;border-radius:3px;">'
+                f'<div style="width:{pct}%;height:100%;background:{color};border-radius:3px;"></div>'
+                f'</div></div>',
+                unsafe_allow_html=True,
+            )
+
+    with oc3:
+        st.markdown(f"**{t('platform_breakdown')}**")
+        df_orgs = load_sheet_data("Organizations")
+        if not df_orgs.empty and "platform" in df_orgs.columns:
+            platform_counts = df_orgs["platform"].dropna().replace("", pd.NA).dropna().value_counts()
+            if not platform_counts.empty:
+                st.bar_chart(platform_counts)
+            else:
+                st.info(t("no_data"))
+        else:
+            st.info(t("no_data"))
+
+    st.markdown("---")
+
+    # ── Section 4: Advanced intelligence ────────────────────────────────────
+    st.subheader(t("report_intel_title"))
+    ic_left, ic_right = st.columns(2)
+
+    with ic_left:
+        st.markdown(f"**{t('hot_keywords')}**")
+        df_kw = load_sheet_data("Keywords")
+        active_kws = []
+        if not df_kw.empty and "keyword" in df_kw.columns:
+            mask = df_kw.get("active", "TRUE").astype(str).str.upper().isin(["TRUE", "1", "YES", ""])
+            active_kws = df_kw[mask]["keyword"].dropna().astype(str).tolist()
+
+        title_series = df.get("title", pd.Series(dtype=str)).fillna("").astype(str)
+        en_series    = df.get("summary_en", pd.Series(dtype=str)).fillna("").astype(str)
+        all_text = " ".join(title_series + " " + en_series).lower()
+
+        kw_freq = {}
+        for kw in active_kws:
+            c = all_text.count(kw.lower())
+            if c > 0:
+                kw_freq[kw] = c
+        kw_sorted = sorted(kw_freq.items(), key=lambda x: x[1], reverse=True)[:15]
+        if kw_sorted:
+            tags_html = ""
+            for kw, count in kw_sorted:
+                if count > 50:
+                    bg, fg = "#FCEBEB", "#791F1F"
+                elif count > 20:
+                    bg, fg = "#FAEEDA", "#633806"
+                else:
+                    bg, fg = "#E6F1FB", "#0C447C"
+                tags_html += (f'<span style="background:{bg};color:{fg};padding:3px 8px;'
+                              f'border-radius:10px;font-size:12px;margin:2px;'
+                              f'display:inline-block;">{kw} × {count}</span>')
+            st.markdown(tags_html, unsafe_allow_html=True)
+        else:
+            st.info(t("no_data"))
+
+    with ic_right:
+        st.markdown(f"**{t('peak_hour')}**")
+        df_with_hour = df.dropna(subset=["ts"]).copy()
+        if not df_with_hour.empty:
+            df_with_hour["hour"] = df_with_hour["ts"].dt.hour
+            hour_counts = df_with_hour.groupby("hour").size().reindex(range(24), fill_value=0)
+            st.bar_chart(hour_counts)
+            peak_hour = int(hour_counts.idxmax())
+            st.caption(f"⏰ {t('peak_hour')}: {peak_hour:02d}:00 ({t('lima_time')})")
+        else:
+            st.info(t("no_data"))
+
+    st.markdown(f"**{t('weekday_activity')}**")
+    if not df.empty and "ts" in df.columns:
+        df_wd = df.dropna(subset=["ts"]).copy()
+        weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        df_wd["weekday"] = df_wd["ts"].dt.day_name()
+        weekday_counts = df_wd["weekday"].value_counts().reindex(weekday_order, fill_value=0)
+        st.bar_chart(weekday_counts)
+
+    st.markdown("---")
+
+    # ── Section 5: Actions ──────────────────────────────────────────────────
+    col_a, col_b, col_c = st.columns(3)
+
+    with col_a:
+        if st.button(f"📤 {t('send_report')}", use_container_width=True, type="primary"):
+            with st.spinner(t("loading")):
+                try:
+                    default_email = os.environ.get("ALERT_EMAIL_TO", "")
+                    try:
+                        default_email = st.secrets.get("ALERT_EMAIL_TO", default_email)
+                    except Exception:
+                        pass
+                    from notifier import send_filtered_report
+                    send_filtered_report(df.to_dict("records"), default_email, t("period_label"))
+                    st.success(t("send_success"))
+                except Exception as e:
+                    st.error(f"{t('report_failed')}: {e}")
+
+    with col_b:
+        export_cols = [c for c in ["timestamp", "title", "source", "relevance_score",
+                                   "event_type", "location", "org_name", "link"]
+                       if c in df.columns]
+        csv_data = df[export_cols].to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            label=f"📥 {t('export_csv')}",
+            data=csv_data,
+            file_name=f"osint_report_{pd.Timestamp.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+    with col_c:
+        st.caption(t("total_in_period").format(n=len(df)))
+
+
 def page_admin():
     st.header(t("page_admin"))
     tab1, tab2, tab3, tab4 = st.tabs([t("tab_orgs"), t("tab_keywords"),
@@ -1550,6 +1941,8 @@ def main():
         page_feed()
     elif page == "global":
         page_global()
+    elif page == "reports":
+        page_reports_new()
     elif page == "admin":
         page_admin()
 
