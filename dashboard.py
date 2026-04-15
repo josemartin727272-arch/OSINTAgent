@@ -185,6 +185,9 @@ UI_TEXT = {
         "with_ai":              "עם ניקוד AI",
         "with_rating":         "כתבות מדורגות",
         "with_location":       "עם מיקום",
+        "top10_approved_note":   "✅ מוצגות כתבות שאישרת (דירוג ≥ 3 כוכבים)",
+        "top10_mixed_note":      "⭐ מוצגות כתבות מאושרות + הגבוהות ביותר",
+        "top10_no_ratings_note": "💡 דרג כתבות בתור הדירוג כדי לשפר את הרשימה הזו",
     },
     "en": {
         "title":         "🔍 OSINTAgent",
@@ -336,6 +339,9 @@ UI_TEXT = {
         "with_ai":             "With AI score",
         "with_rating":         "Rated articles",
         "with_location":       "With location",
+        "top10_approved_note":   "✅ Showing articles you approved (rating ≥ 3 stars)",
+        "top10_mixed_note":      "⭐ Showing approved articles + highest scored",
+        "top10_no_ratings_note": "💡 Rate articles in the review queue to improve this list",
     },
     "es": {
         "title":         "🔍 OSINTAgent",
@@ -487,6 +493,9 @@ UI_TEXT = {
         "with_ai":             "Con puntuación AI",
         "with_rating":         "Artículos valorados",
         "with_location":       "Con ubicación",
+        "top10_approved_note":   "✅ Mostrando artículos aprobados (valoración ≥ 3 estrellas)",
+        "top10_mixed_note":      "⭐ Mostrando artículos aprobados + los de mayor puntuación",
+        "top10_no_ratings_note": "💡 Valora artículos en la cola de revisión para mejorar esta lista",
     },
 }
 
@@ -707,23 +716,27 @@ def render_sidebar():
         st.title("🔍 OSINTAgent")
         st.caption(t("app_subtitle"))
         st.info("🌍 Peru")
-
         st.markdown("---")
 
-        pending = _count_pending_ratings()
-        page_labels = []
-        for t_key, _ in PAGE_ORDER:
+        if "current_page" not in st.session_state:
+            st.session_state["current_page"] = "home"
+        current = st.session_state["current_page"]
+
+        pending_n = _count_pending_ratings()
+
+        for t_key, page_key in PAGE_ORDER:
             label = t(t_key)
-            if t_key == "page_review" and pending > 0:
-                page_labels.append(f"{label} 🔴 {pending}")
-            else:
-                page_labels.append(label)
+            if page_key == "review" and pending_n > 0:
+                label = f"{label} 🔴 {pending_n}"
+            btn_type = "primary" if page_key == current else "secondary"
+            if st.button(label, key=f"nav_{page_key}",
+                         use_container_width=True, type=btn_type):
+                st.session_state["current_page"] = page_key
+                if page_key == "review":
+                    st.session_state["review_index"] = 0
+                st.rerun()
 
-        selected = st.radio(t("nav_label"), page_labels, label_visibility="collapsed")
         st.markdown("---")
-
-    idx = page_labels.index(selected)
-    return PAGE_ORDER[idx][1]
 
 
 # ─── Page: Findings ───────────────────────────────────────────────────────────
@@ -964,7 +977,26 @@ def page_home():
     # Top 10 most-relevant (last 7 days)
     st.markdown(f"### {t('top10_title')}")
     if "relevance_score" in last_7d.columns and not last_7d.empty:
-        top = last_7d.sort_values("relevance_score", ascending=False).head(10)
+        last_7d = last_7d.copy()
+        if "rating" in last_7d.columns:
+            last_7d["_rating_num"] = pd.to_numeric(last_7d["rating"], errors="coerce").fillna(0)
+            approved = last_7d[last_7d["_rating_num"] >= 3]
+        else:
+            last_7d["_rating_num"] = 0
+            approved = last_7d.iloc[0:0]
+
+        if len(approved) >= 5:
+            top = approved.nlargest(10, "relevance_score")
+            st.caption(t("top10_approved_note"))
+        elif len(approved) > 0:
+            remaining = last_7d[last_7d["_rating_num"] == 0].nlargest(
+                max(0, 10 - len(approved)), "relevance_score")
+            top = pd.concat([approved, remaining]).nlargest(10, "relevance_score")
+            st.caption(t("top10_mixed_note"))
+        else:
+            top = last_7d.nlargest(10, "relevance_score")
+            st.info(t("top10_no_ratings_note"))
+
         for _, row in top.iterrows():
             try:
                 s = float(row.get("relevance_score", 0) or 0)
@@ -1996,6 +2028,8 @@ def page_admin():
 def main():
     if "ui_lang" not in st.session_state:
         st.session_state["ui_lang"] = "he"
+    if "current_page" not in st.session_state:
+        st.session_state["current_page"] = "home"
 
     lang = get_ui_lang()
     direction  = "rtl"   if lang == "he" else "ltr"
@@ -2019,7 +2053,8 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    page = render_sidebar()
+    render_sidebar()
+    page = st.session_state.get("current_page", "home")
 
     if page == "home":
         page_home()
