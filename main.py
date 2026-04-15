@@ -5,9 +5,10 @@ main.py — OSINTAgent entry point.
 import sys
 import time
 from scanner import fetch_all_articles
-from analyzer import analyze_all
+from analyzer import analyze_all, build_feedback_boost
 from sheets import (load_organizations, load_keywords, load_settings,
-                    save_results, get_existing_links, log_scan)
+                    save_results, get_existing_links, log_scan,
+                    load_rated_results, load_low_rated_results)
 from notifier import send_alert_email
 from config import ALERT_THRESHOLD
 
@@ -41,8 +42,20 @@ def run():
         print("[main] No organizations found. Exiting.")
         sys.exit(0)
 
+    # 2b. Build feedback boost from prior ratings
+    try:
+        high_rated = load_rated_results(min_stars=4)
+        low_rated  = load_low_rated_results(max_stars=2)
+        feedback = build_feedback_boost(high_rated, low_rated)
+        print(f"[main] Feedback: high={len(high_rated)} low={len(low_rated)} "
+              f"| boosted_kw={len(feedback['boosted_keywords'])} "
+              f"high_orgs={len(feedback['high_value_orgs'])}")
+    except Exception as e:
+        print(f"[main] Feedback skipped: {e}")
+        feedback = None
+
     # 3. Fetch
-    articles = fetch_all_articles(organizations, keywords, languages, country_code)
+    articles = fetch_all_articles(organizations, keywords, languages, country_code, country)
     print(f"\n[main] Fetched: {len(articles)}")
 
     if not articles:
@@ -62,7 +75,7 @@ def run():
         return
 
     # 5. Analyze
-    results = analyze_all(articles, keywords, country, threshold)
+    results = analyze_all(articles, keywords, country, threshold, feedback)
     print(f"[main] Relevant: {len(results)}")
 
     # 6. Save

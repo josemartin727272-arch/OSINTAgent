@@ -244,6 +244,50 @@ def save_results(results: list[dict]) -> None:
     print(f"[sheets] Saved {len(rows)} results")
 
 
+def load_rated_results(min_stars: int = 4) -> list:
+    """Return Results rows where rating >= min_stars."""
+    try:
+        client = _get_client()
+        ws = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_RESULTS)
+        records = ws.get_all_records()
+    except Exception as e:
+        print(f"[sheets] load_rated_results failed: {e}")
+        return []
+    out = []
+    for r in records:
+        raw = r.get("rating", "")
+        try:
+            rating = int(raw) if str(raw).strip() else 0
+        except (ValueError, TypeError):
+            rating = 0
+        if rating >= min_stars:
+            out.append(r)
+    print(f"[sheets] load_rated_results(min={min_stars}) → {len(out)}")
+    return out
+
+
+def load_low_rated_results(max_stars: int = 2) -> list:
+    """Return Results rows where 0 < rating <= max_stars (ignores unrated)."""
+    try:
+        client = _get_client()
+        ws = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_RESULTS)
+        records = ws.get_all_records()
+    except Exception as e:
+        print(f"[sheets] load_low_rated_results failed: {e}")
+        return []
+    out = []
+    for r in records:
+        raw = r.get("rating", "")
+        try:
+            rating = int(raw) if str(raw).strip() else 0
+        except (ValueError, TypeError):
+            rating = 0
+        if 0 < rating <= max_stars:
+            out.append(r)
+    print(f"[sheets] load_low_rated_results(max={max_stars}) → {len(out)}")
+    return out
+
+
 def get_existing_links() -> set:
     client = _get_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
