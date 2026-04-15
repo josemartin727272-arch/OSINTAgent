@@ -288,11 +288,14 @@ def run_historical_scan(start_year: int = 2025, methods=None):
         print("[historical] Nothing to process.")
         return
 
-    print("[historical] Analyzing...")
+    print("[historical] Analyzing (geo filter bypassed)...")
+    for a in all_articles:
+        a["_skip_geo"] = True
+
     results = analyze_all(
         all_articles, keywords,
         country=settings.get("country", "Peru"),
-        threshold=threshold,
+        threshold=3,
         feedback=None,
         organizations=None,
     )

@@ -302,7 +302,8 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
             detected_org = match
             article = {**article, "org_name": detected_org}
 
-    if not is_global and not _is_peru_relevant(article, country):
+    skip_geo = bool(article.get("_skip_geo", False))
+    if not is_global and not skip_geo and not _is_peru_relevant(article, country):
         return {
             **article,
             "relevance_score": 0,
