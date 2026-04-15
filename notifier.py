@@ -226,6 +226,13 @@ def send_monthly_summary(records: list, month_label: str) -> None:
     print(f"[notifier] Monthly summary sent ({len(records)} records)")
 
 
+def send_filtered_report(records: list, recipient: str, period_label: str = "") -> None:
+    """Send filtered feed (rating >= 3) to a chosen recipient."""
+    html = _build_summary_html(records, period_label, "מסונן")
+    _send_email(f"📰 [OSINTAgent] Intelligence Feed — {period_label}", html, to=recipient)
+    print(f"[notifier] Filtered report sent to {recipient} ({len(records)} records)")
+
+
 def send_annual_summary(records: list, year: str) -> None:
     html = _build_summary_html(records, year, "שנתי")
     _send_email(f"📊 [OSINTAgent] דו\"ח שנתי — {year}", html)

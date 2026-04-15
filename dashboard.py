@@ -11,6 +11,13 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, timezone, timedelta
 import os
 
+try:
+    import folium
+    from streamlit_folium import st_folium
+    FOLIUM_AVAILABLE = True
+except ImportError:
+    FOLIUM_AVAILABLE = False
+
 # ─── Page config ─────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="OSINTAgent",
@@ -193,6 +200,28 @@ EVENT_TYPE_LABELS = {
     "none":            {"he": "—",                  "en": "—",                "es": "—"},
 }
 
+PERU_CITY_COORDS = {
+    "Lima":     (-12.0464, -77.0428),
+    "Cusco":    (-13.5319, -71.9675),
+    "Arequipa": (-16.4090, -71.5375),
+    "Trujillo": (-8.1116,  -79.0287),
+    "Piura":    (-5.1945,  -80.6328),
+    "Iquitos":  (-3.7489,  -73.2538),
+    "Huancayo": (-12.0651, -75.2049),
+    "Puno":     (-15.8402, -70.0219),
+    "Chiclayo": (-6.7714,  -79.8409),
+}
+
+LIMA_NEIGHBORHOODS = {
+    "Miraflores":  (-12.1191, -77.0336),
+    "San Isidro":  (-12.0978, -77.0360),
+    "Centro Lima": (-12.0553, -77.0353),
+    "Barranco":    (-12.1500, -77.0200),
+    "San Borja":   (-12.1058, -77.0014),
+    "La Victoria": (-12.0658, -77.0200),
+}
+
+
 PERU_CITIES = {
     "Lima":      "🏙️ לימה",
     "Cusco":     "🏔️ קוסקו",
@@ -327,9 +356,30 @@ def score_badge(score) -> str:
 
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
+PAGES = {
+    "🏠 דף בית":           "home",
+    "✍️ תור דירוג":         "review",
+    "📰 חדשות מסוננות":    "feed",
+    "🌍 אירועים גלובליים": "global",
+    "⚙️ ניהול":             "admin",
+}
+
+
+def _count_pending_ratings() -> int:
+    try:
+        df = load_sheet_data("Results")
+    except Exception:
+        return 0
+    if df.empty:
+        return 0
+    if "rating" not in df.columns:
+        return len(df)
+    rated = df["rating"].apply(lambda x: str(x).strip().isdigit() and int(x) > 0)
+    return int((~rated).sum())
+
+
 def render_sidebar():
     with st.sidebar:
-        # Language
         lang_options = {"עברית": "he", "English": "en", "Español": "es"}
         cols = st.columns(3)
         for i, (label, code) in enumerate(lang_options.items()):
@@ -339,24 +389,25 @@ def render_sidebar():
                 st.rerun()
 
         st.markdown("---")
-        st.title(t("title"))
-        st.caption(t("subtitle"))
+        st.title("🔍 OSINTAgent")
+        st.caption("ניטור פעילות אנטי-ישראלית")
         st.info("🌍 Peru")
 
         st.markdown("---")
 
-        pages = [
-            t("page_findings"),
-            t("page_orgs"),
-            t("page_keywords"),
-            t("page_settings"),
-            t("page_reports"),
-        ]
-        page = st.radio("Navigation", pages, label_visibility="collapsed")
+        pending = _count_pending_ratings()
+        page_labels = []
+        for label in PAGES.keys():
+            if label.startswith("✍️") and pending > 0:
+                page_labels.append(f"{label} 🔴 {pending}")
+            else:
+                page_labels.append(label)
 
+        selected = st.radio("Navigation", page_labels, label_visibility="collapsed")
         st.markdown("---")
 
-    return page
+    idx = page_labels.index(selected)
+    return list(PAGES.values())[idx]
 
 
 # ─── Page: Findings ───────────────────────────────────────────────────────────
@@ -428,144 +479,139 @@ def _render_finding_card(row, idx, with_rating=True):
     st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
 
 
-def _render_global_events(df: pd.DataFrame):
-    st.markdown("### 🌍 אירועים גלובליים בולטים")
-
-    if "is_global" not in df.columns or "relevance_score" not in df.columns:
-        st.info("✅ אין אירועים גלובליים חריגים ב-48 שעות האחרונות")
-        return
-
-    df = df.copy()
-    df["relevance_score"] = pd.to_numeric(df["relevance_score"], errors="coerce").fillna(0)
-    df["_ts"] = pd.to_datetime(df.get("timestamp", "").astype(str).str[:16],
-                               format="%Y-%m-%d %H:%M", errors="coerce")
-    cutoff = pd.Timestamp.now() - pd.Timedelta(hours=48)
-
-    gdf = df[
-        (df["is_global"].astype(str).str.upper() == "YES") &
-        (df["relevance_score"] >= 7) &
-        (df["_ts"] >= cutoff)
-    ].sort_values("_ts", ascending=False)
-
-    if gdf.empty:
-        st.info("✅ אין אירועים גלובליים חריגים ב-48 שעות האחרונות")
-        return
-
-    for _, row in gdf.iterrows():
-        title = str(row.get("title", ""))[:140]
-        link  = str(row.get("link", ""))
-        source = str(row.get("source", ""))
-        ts = str(row.get("timestamp", ""))[:16]
-        loc = str(row.get("location", "") or "—")
-        summary_he = str(row.get("summary_he", ""))[:160]
-        st.markdown(
-            f'<div style="border-left:4px solid #2980b9;background:#1a2a3a;'
-            f'color:white;padding:12px 16px;margin-bottom:8px;border-radius:4px;">'
-            f'🌍 <strong><a href="{link}" target="_blank" style="color:#9ecbff;text-decoration:none;">{title}</a></strong><br>'
-            f'<span style="font-size:12px;opacity:.8;">📍 {loc} | {source} | {ts}</span><br>'
-            f'<span style="font-size:12px;">{summary_he}</span>'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
-
-def _render_top_recent(df: pd.DataFrame, n: int = 10):
-    st.markdown("### 🔥 10 הידיעות האחרונות")
-    if "timestamp" not in df.columns:
-        st.info(t("no_data"))
-        return
-    df_sorted = df.copy()
-    df_sorted["_ts"] = pd.to_datetime(df_sorted["timestamp"].astype(str).str[:16],
-                                      format="%Y-%m-%d %H:%M", errors="coerce")
-    df_sorted = df_sorted.sort_values("_ts", ascending=False).head(n)
-
-    for _, row in df_sorted.iterrows():
-        try:
-            s = float(row.get("relevance_score", 0) or 0)
-        except Exception:
-            s = 0
-        color = "#cc0000" if s >= 8 else "#e67e00" if s >= 6 else "#888"
-        title = str(row.get("title", ""))[:110]
-        link = str(row.get("link", ""))
-        source = str(row.get("source", ""))
-        ts = str(row.get("timestamp", ""))[:16]
-        etype = str(row.get("event_type", ""))
-        summary_he = str(row.get("summary_he", ""))[:80]
-        st.markdown(
-            f'<div style="padding:6px 10px;margin-bottom:3px;border-radius:4px;background:#fafafa;">'
-            f'<span style="background:{color};color:white;padding:1px 8px;border-radius:10px;'
-            f'font-size:12px;font-weight:bold;">{s:.0f}</span> '
-            f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span> '
-            f'<a href="{link}" target="_blank" style="color:#222;text-decoration:none;font-weight:600;">{title}</a>'
-            f' — <span style="font-size:11px;color:#888;">{source} | {ts}</span>'
-            f'<br><span style="font-size:11px;color:#777;">{summary_he}</span>'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
+def _render_global_card(row):
+    title = str(row.get("title", ""))[:140]
+    link  = str(row.get("link", ""))
+    source = str(row.get("source", ""))
+    ts = str(row.get("timestamp", ""))[:16]
+    loc = str(row.get("location", "") or "—")
+    summary_he = str(row.get("summary_he", ""))[:160]
+    try:
+        score = float(row.get("relevance_score", 0) or 0)
+    except Exception:
+        score = 0
     st.markdown(
-        '<a href="#full-list" style="display:inline-block;background:#2980b9;color:white;'
-        'padding:4px 12px;border-radius:4px;text-decoration:none;font-size:12px;margin-top:4px;">הצג הכל ↓</a>',
+        f'<div style="border-left:4px solid #2980b9;background:#1a2a3a;'
+        f'color:white;padding:12px 16px;margin-bottom:8px;border-radius:4px;">'
+        f'🌍 <strong><a href="{link}" target="_blank" style="color:#9ecbff;text-decoration:none;">{title}</a></strong>'
+        f'&nbsp;<span style="background:#2980b9;padding:1px 8px;border-radius:10px;font-size:11px;">{score:.0f}/10</span><br>'
+        f'<span style="font-size:12px;opacity:.8;">📍 {loc} | {source} | {ts}</span><br>'
+        f'<span style="font-size:12px;">{summary_he}</span>'
+        f'</div>',
         unsafe_allow_html=True
     )
 
 
-def _render_peru_geo(df: pd.DataFrame):
-    st.markdown("### 🗺️ פריסה גיאוגרפית — פרו")
+def _rating_of(row) -> int:
+    raw = row.get("rating", "") if hasattr(row, "get") else ""
+    try:
+        return int(raw) if str(raw).strip() else 0
+    except (ValueError, TypeError):
+        return 0
 
-    if "location" not in df.columns:
-        st.info(t("no_data"))
-        return
 
+def _parse_ts_col(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["_ts"] = pd.to_datetime(df.get("timestamp", "").astype(str).str[:16],
                                format="%Y-%m-%d %H:%M", errors="coerce")
-    recent_cutoff = pd.Timestamp.now() - pd.Timedelta(days=7)
-
-    named_cities = [c for c in PERU_CITIES.keys() if c != "אחר"]
-    unknown_label = "אחר"
-
-    def bucket_for(loc_val):
-        loc_str = str(loc_val).strip()
-        if not loc_str or loc_str.lower() in ("nan", "none"):
-            return None
-        for city in named_cities:
-            if city.lower() in loc_str.lower():
-                return city
-        return unknown_label
-
-    df["_bucket"] = df["location"].apply(bucket_for)
-    df_city = df[df["_bucket"].notna()]
-
-    for city, label in PERU_CITIES.items():
-        sub = df_city[df_city["_bucket"] == city]
-        if sub.empty:
-            continue
-        is_active = (sub["_ts"] >= recent_cutoff).any()
-        badge = " 🟢 <span style='color:#27ae60;font-size:12px;'>פעיל</span>" if is_active else ""
-        header = f"{label} — {len(sub)} כתבות{badge}"
-        with st.expander(header):
-            latest = sub.sort_values("_ts", ascending=False).head(5)
-            for i, row in enumerate(latest.iterrows()):
-                _, r = row
-                _render_finding_card(r, idx=f"geo_{city}_{i}", with_rating=False)
-
-    no_loc = df[df["_bucket"].isna()]
-    if not no_loc.empty:
-        with st.expander(f"📍 לא זוהה מיקום — {len(no_loc)} כתבות"):
-            latest = no_loc.sort_values("_ts", ascending=False).head(5)
-            for i, row in enumerate(latest.iterrows()):
-                _, r = row
-                _render_finding_card(r, idx=f"geo_none_{i}", with_rating=False)
-
-    counts_series = df_city[df_city["_bucket"] != unknown_label]["_bucket"].value_counts().head(10)
-    if not counts_series.empty:
-        st.markdown("**סיכום — 10 הערים המובילות**")
-        st.bar_chart(counts_series)
+    if "relevance_score" in df.columns:
+        df["relevance_score"] = pd.to_numeric(df["relevance_score"], errors="coerce").fillna(0)
+    return df
 
 
-def page_findings():
-    st.header(t("page_findings"))
+def _save_rating(link: str, stars: int):
+    client = get_gspread_client()
+    if not client:
+        return
+    ws = client.open_by_key(SPREADSHEET_ID).worksheet("Results")
+    all_vals = ws.get_all_values()
+    headers = all_vals[0] if all_vals else []
+    if "rating" not in headers:
+        ws.update_cell(1, len(headers)+1, "rating")
+        rating_col = len(headers)+1
+    else:
+        rating_col = headers.index("rating") + 1
+    link_col = headers.index("link") if "link" in headers else 3
+    for r_idx, r_row in enumerate(all_vals[1:], start=2):
+        if len(r_row) > link_col and r_row[link_col] == link:
+            ws.update_cell(r_idx, rating_col, stars)
+            break
+    st.cache_data.clear()
+
+
+def _peru_city_bucket(loc_val) -> str:
+    loc_str = str(loc_val).strip()
+    if not loc_str or loc_str.lower() in ("nan", "none"):
+        return None
+    for city in PERU_CITY_COORDS.keys():
+        if city.lower() in loc_str.lower():
+            return city
+    return None
+
+
+def _render_peru_map(df: pd.DataFrame):
+    """National map of Peru with article-count circles."""
+    df = _parse_ts_col(df)
+    cutoff = pd.Timestamp.now() - pd.Timedelta(days=7)
+    recent = df[df["_ts"] >= cutoff].copy() if "_ts" in df.columns else df
+    if "location" not in recent.columns:
+        return
+    recent["_city"] = recent["location"].apply(_peru_city_bucket)
+    counts = recent.groupby("_city").size().to_dict()
+    if not counts:
+        st.info("אין כתבות ב-7 הימים האחרונים עם מיקום מזוהה")
+        return
+
+    if FOLIUM_AVAILABLE:
+        fmap = folium.Map(location=[-9.19, -75.0152], zoom_start=5, tiles="cartodbpositron")
+        for city, (lat, lon) in PERU_CITY_COORDS.items():
+            n = counts.get(city, 0)
+            if n == 0:
+                continue
+            folium.CircleMarker(
+                location=[lat, lon],
+                radius=6 + min(20, n * 2),
+                popup=f"{city}: {n} כתבות",
+                tooltip=f"{city} — {n}",
+                color="#cc0000", fill=True, fill_opacity=0.6,
+            ).add_to(fmap)
+        st_folium(fmap, width=None, height=400, returned_objects=[])
+    else:
+        rows = []
+        for city, (lat, lon) in PERU_CITY_COORDS.items():
+            n = counts.get(city, 0)
+            if n > 0:
+                rows.append({"lat": lat, "lon": lon, "city": city, "count": n})
+        if rows:
+            st.map(pd.DataFrame(rows), zoom=4)
+
+
+def _render_lima_map(df: pd.DataFrame):
+    if "location" not in df.columns:
+        return
+    lima = df[df["location"].astype(str).str.contains("Lima", case=False, na=False)]
+    if lima.empty:
+        return
+    st.markdown(f"**🏙️ לימה — {len(lima)} כתבות**")
+    if FOLIUM_AVAILABLE:
+        fmap = folium.Map(location=[-12.0764, -77.0300], zoom_start=11, tiles="cartodbpositron")
+        for name, (lat, lon) in LIMA_NEIGHBORHOODS.items():
+            folium.Marker(
+                location=[lat, lon],
+                popup=name,
+                tooltip=name,
+                icon=folium.Icon(color="blue", icon="info-sign"),
+            ).add_to(fmap)
+        st_folium(fmap, width=None, height=380, returned_objects=[])
+    else:
+        rows = [{"lat": lat, "lon": lon} for lat, lon in LIMA_NEIGHBORHOODS.values()]
+        st.map(pd.DataFrame(rows), zoom=11)
+
+
+# ─── Page 1: Home ─────────────────────────────────────────────────────────────
+
+def page_home():
+    st.header("🏠 דף בית")
 
     with st.spinner(t("loading")):
         df = load_sheet_data("Results")
@@ -574,82 +620,325 @@ def page_findings():
         st.info(t("no_data"))
         return
 
-    # ── KPI row (all data) ──────────────────────────────────────────────────
-    df_kpi = df.copy()
-    if "relevance_score" in df_kpi.columns:
-        df_kpi["relevance_score"] = pd.to_numeric(df_kpi["relevance_score"], errors="coerce").fillna(0)
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric(t("total"), len(df_kpi))
-        alert_count = len(df_kpi[df_kpi["is_alert"].astype(str).str.upper() == "YES"]) if "is_alert" in df_kpi.columns else 0
-        c2.metric(t("alerts_count"), alert_count)
-        avg = df_kpi["relevance_score"].mean()
-        c3.metric(t("avg_score"), f"{avg:.1f}")
-        high = len(df_kpi[df_kpi["relevance_score"] >= 8])
-        c4.metric("🔴 Critical (8+)", high)
+    df = _parse_ts_col(df)
+    now = pd.Timestamp.now()
+    last_24h = df[df["_ts"] >= now - pd.Timedelta(hours=24)]
+    last_7d  = df[df["_ts"] >= now - pd.Timedelta(days=7)]
+
+    # KPI tiles
+    c1, c2, c3, c4 = st.columns(4)
+    crit = len(last_24h[last_24h["relevance_score"] >= 8]) if "relevance_score" in last_24h.columns else 0
+    reg  = len(last_24h[(last_24h["relevance_score"] >= 6) & (last_24h["relevance_score"] < 8)]) if "relevance_score" in last_24h.columns else 0
+    c1.metric("🔴 קריטיות (24ש)", crit)
+    c2.metric("🟠 רגילות (24ש)", reg)
+    c3.metric("📰 כתבות (שבוע)", len(last_7d))
+
+    # Last scan from ScanLog
+    scan_df = load_sheet_data("ScanLog")
+    if not scan_df.empty:
+        last_row = scan_df.iloc[-1]
+        c4.metric("🕐 סריקה אחרונה",
+                  str(last_row.get("timestamp", ""))[5:16],
+                  delta=str(last_row.get("status", "")),
+                  delta_color="off")
+    else:
+        c4.metric("🕐 סריקה אחרונה", "—")
 
     st.markdown("---")
 
-    # ── Global events ───────────────────────────────────────────────────────
-    _render_global_events(df)
+    # Top 10 most-relevant (last 7 days)
+    st.markdown("### 🔥 10 הידיעות הכי רלוונטיות (שבוע אחרון)")
+    if "relevance_score" in last_7d.columns and not last_7d.empty:
+        top = last_7d.sort_values("relevance_score", ascending=False).head(10)
+        for _, row in top.iterrows():
+            try:
+                s = float(row.get("relevance_score", 0) or 0)
+            except Exception:
+                s = 0
+            color = "#cc0000" if s >= 8 else "#e67e00" if s >= 6 else "#888"
+            title = str(row.get("title", ""))[:110]
+            link = str(row.get("link", ""))
+            source = str(row.get("source", ""))
+            ts = str(row.get("timestamp", ""))[:16]
+            etype = str(row.get("event_type", ""))
+            summary_he = str(row.get("summary_he", ""))[:100]
+            st.markdown(
+                f'<div style="padding:8px 12px;margin-bottom:4px;border-radius:4px;background:#fafafa;'
+                f'border-left:3px solid {color};">'
+                f'<span style="background:{color};color:white;padding:1px 8px;border-radius:10px;'
+                f'font-size:12px;font-weight:bold;">{s:.0f}</span> '
+                f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span> '
+                f'<a href="{link}" target="_blank" style="color:#222;text-decoration:none;font-weight:600;">{title}</a>'
+                f'<br><span style="font-size:11px;color:#888;">{source} | {ts}</span>'
+                f'<br><span style="font-size:12px;color:#555;">{summary_he}</span>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+    else:
+        st.info(t("no_data"))
 
     st.markdown("---")
 
-    # ── Top 10 recent ───────────────────────────────────────────────────────
-    _render_top_recent(df, n=10)
+    # Peru national map
+    st.markdown("### 🗺️ מפת פרו — 7 ימים אחרונים")
+    _render_peru_map(df)
 
     st.markdown("---")
 
-    # ── Peru geographic layout ──────────────────────────────────────────────
-    _render_peru_geo(df)
+    # Lima focused map
+    st.markdown("### 🏙️ מפת לימה")
+    _render_lima_map(df)
 
-    st.markdown("---")
 
-    # ── Filters ──────────────────────────────────────────────────────────────
-    st.markdown('<div id="full-list"></div>', unsafe_allow_html=True)
-    with st.expander(f"🔍 {t('filters')}", expanded=True):
-        col1, col2, col3, col4 = st.columns(4)
+# ─── Page 2: Review queue ─────────────────────────────────────────────────────
 
-        # Score filter
-        with col1:
-            min_score = st.slider(t("score"), 0, 10, 0)
+_MOBILE_CSS = """
+<style>
+@media (max-width: 768px) {
+    .stButton > button {
+        font-size: 18px !important;
+        padding: 10px 2px !important;
+        min-height: 48px !important;
+    }
+    div[data-testid="column"] { padding: 0 1px !important; }
+}
+.stMarkdown, p, li { direction: rtl; text-align: right; }
+</style>
+"""
 
-        # Event type filter
-        with col2:
-            etypes = [t("all")] + sorted(df["event_type"].dropna().unique().tolist()) if "event_type" in df else [t("all")]
-            etype_sel = st.selectbox(t("event_type"), etypes)
 
-        # Location filter
-        with col3:
-            locs = [t("all")] + sorted(df["location"].dropna().unique().tolist()) if "location" in df else [t("all")]
-            loc_sel = st.selectbox(t("location"), locs)
+def page_review():
+    st.markdown(_MOBILE_CSS, unsafe_allow_html=True)
+    st.header("✍️ תור דירוג")
 
-        # Alerts only
-        with col4:
-            alerts_only = st.checkbox(f"🔔 {t('alerts_count')} only")
+    df = load_sheet_data("Results")
+    if df.empty:
+        st.info(t("no_data"))
+        return
 
-    # Apply filters
+    if "rating" not in df.columns:
+        df = df.copy()
+        df["rating"] = ""
+    df["_rating_int"] = df["rating"].apply(lambda x: int(x) if str(x).strip().isdigit() else 0)
+    df["relevance_score"] = pd.to_numeric(df.get("relevance_score", 0), errors="coerce").fillna(0)
+
+    unrated = df[df["_rating_int"] == 0].sort_values("relevance_score", ascending=False)
+    rated_today = df[df["_rating_int"] > 0]
+    total = len(df)
+    done  = len(rated_today)
+
+    st.caption(f"נותרו {len(unrated)} כתבות לדירוג")
+    if total:
+        st.progress(min(1.0, done / total), text=f"דורגו: {done}/{total}")
+
+    # Filter skipped in session
+    skipped = st.session_state.setdefault("review_skipped", set())
+    queue = unrated[~unrated["link"].astype(str).isin(skipped)]
+
+    if queue.empty:
+        st.success("✅ אין כתבות לדירוג כרגע")
+        return
+
+    row = queue.iloc[0]
+    idx = row.name
+    score = float(row.get("relevance_score", 0) or 0)
+    color = "#cc0000" if score >= 8 else "#e67e00" if score >= 6 else "#2980b9"
+    title = str(row.get("title", ""))
+    link = str(row.get("link", ""))
+    source = str(row.get("source", ""))
+    ts = str(row.get("timestamp", ""))[:16]
+    org = str(row.get("org_name", ""))
+    loc = str(row.get("location", "") or "—")
+    summary_he = str(row.get("summary_he", ""))
+
+    st.markdown(
+        f'<div style="border:2px solid {color};border-radius:8px;padding:14px 16px;margin-bottom:14px;background:#fff;">'
+        f'<span style="background:{color};color:white;padding:3px 12px;border-radius:12px;font-weight:bold;">{score:.0f}/10</span>'
+        f'&nbsp;&nbsp;<strong style="font-size:16px;"><a href="{link}" target="_blank" style="color:#222;text-decoration:none;">{title}</a></strong>'
+        f'<div style="color:#777;font-size:12px;margin-top:6px;">📰 {source} | 📅 {ts} | 🏢 {org} | 📍 {loc}</div>'
+        f'<div style="font-size:13px;color:#444;margin-top:8px;">{summary_he}</div>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
+    cols = st.columns(6)
+    star_labels = ["⭐1", "⭐⭐2", "⭐⭐⭐3", "⭐⭐⭐⭐4", "⭐⭐⭐⭐⭐5", "דלג ⏭"]
+    for i, label in enumerate(star_labels):
+        key = f"review_{idx}_{i}"
+        if cols[i].button(label, key=key, use_container_width=True):
+            if i < 5:
+                try:
+                    _save_rating(link, i + 1)
+                    st.toast(f"נשמר: {i+1}★")
+                except Exception as e:
+                    st.error(f"שמירה נכשלה: {e}")
+            else:
+                skipped.add(link)
+                st.toast("דולג")
+            st.rerun()
+
+
+# ─── Page 3: Filtered feed ────────────────────────────────────────────────────
+
+def page_feed():
+    st.header("📰 חדשות מסוננות")
+    df = load_sheet_data("Results")
+    if df.empty or "rating" not in df.columns:
+        st.info("אין כתבות מדורגות. עבור לתור דירוג כדי להתחיל.")
+        return
+
+    df = _parse_ts_col(df)
+    df["_rating"] = df["rating"].apply(lambda x: int(x) if str(x).strip().isdigit() else 0)
+    df = df[df["_rating"] >= 3]
+    if df.empty:
+        st.info("אין עדיין כתבות בדירוג 3★ או יותר")
+        return
+
+    # Filters
+    with st.expander("🔍 פילטרים", expanded=True):
+        search_q = st.text_input("🔎 חיפוש טקסט", "")
+        period = st.radio("תקופה", ["היום", "שבוע", "חודש", "הכל"],
+                          horizontal=True, index=3)
+        etypes_avail = sorted([e for e in df["event_type"].dropna().unique() if e])
+        etype_sel = st.multiselect("סוג אירוע", etypes_avail, default=etypes_avail)
+
     filtered = df.copy()
-    if "relevance_score" in filtered.columns:
-        filtered["relevance_score"] = pd.to_numeric(filtered["relevance_score"], errors="coerce").fillna(0)
-        filtered = filtered[filtered["relevance_score"] >= min_score]
-    if etype_sel != t("all") and "event_type" in filtered.columns:
-        filtered = filtered[filtered["event_type"] == etype_sel]
-    if loc_sel != t("all") and "location" in filtered.columns:
-        filtered = filtered[filtered["location"] == loc_sel]
-    if alerts_only and "is_alert" in filtered.columns:
-        filtered = filtered[filtered["is_alert"].astype(str).str.upper() == "YES"]
+    if search_q:
+        q = search_q.lower()
+        filtered = filtered[
+            filtered["title"].astype(str).str.lower().str.contains(q, na=False) |
+            filtered["summary_he"].astype(str).str.lower().str.contains(q, na=False)
+        ]
 
-    # Sort newest first
-    if "timestamp" in filtered.columns:
-        filtered = filtered.sort_values("timestamp", ascending=False)
+    now = pd.Timestamp.now()
+    if period == "היום":
+        filtered = filtered[filtered["_ts"] >= now - pd.Timedelta(days=1)]
+    elif period == "שבוע":
+        filtered = filtered[filtered["_ts"] >= now - pd.Timedelta(days=7)]
+    elif period == "חודש":
+        filtered = filtered[filtered["_ts"] >= now - pd.Timedelta(days=30)]
 
-    st.caption(f"מציג {len(filtered)} מתוך {len(df)} ממצאים")
+    if etype_sel:
+        filtered = filtered[filtered["event_type"].isin(etype_sel)]
+
+    filtered = filtered.sort_values("relevance_score", ascending=False)
+    st.caption(f"מציג {len(filtered)} כתבות")
+
+    # Email section
+    with st.expander("📤 שלח דוח"):
+        default_email = os.environ.get("ALERT_EMAIL_TO", "")
+        try:
+            default_email = st.secrets.get("ALERT_EMAIL_TO", default_email)
+        except Exception:
+            pass
+        recipient = st.text_input("מייל", value=default_email)
+        period_label = st.selectbox("תקופה", ["היום", "שבוע", "חודש"], key="feed_email_period")
+        if st.button("שלח", type="primary"):
+            try:
+                from notifier import send_filtered_report
+                send_filtered_report(filtered.to_dict("records"), recipient, period_label)
+                st.success("נשלח!")
+            except Exception as e:
+                st.error(f"שליחה נכשלה: {e}")
 
     st.markdown("---")
 
-    # ── Full filtered list ──────────────────────────────────────────────────
+    # Cards
     for idx, row in filtered.iterrows():
-        _render_finding_card(row, idx=idx, with_rating=True)
+        rating = int(row.get("_rating", 0))
+        score = float(row.get("relevance_score", 0) or 0)
+        color = "#cc0000" if score >= 8 else "#e67e00" if score >= 6 else "#2980b9"
+        title = str(row.get("title", ""))[:140]
+        link = str(row.get("link", ""))
+        source = str(row.get("source", ""))
+        ts = str(row.get("timestamp", ""))[:16]
+        etype = str(row.get("event_type", ""))
+        loc = str(row.get("location", "") or "—")
+        summary_he = str(row.get("summary_he", ""))[:200]
+        st.markdown(
+            f'<div style="border-left:4px solid {color};background:#fafafa;'
+            f'padding:10px 14px;margin-bottom:6px;border-radius:4px;">'
+            f'<span style="background:{color};color:white;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:bold;">{score:.0f}</span>'
+            f'&nbsp;<span style="color:#daa520;">{"⭐" * rating}</span> '
+            f'<span style="font-size:12px;color:#555;">{event_label(etype)}</span>&nbsp;'
+            f'<span style="font-size:12px;color:#777;">📍 {loc}</span><br>'
+            f'<strong><a href="{link}" target="_blank" style="color:#222;text-decoration:none;">{title}</a></strong>'
+            f'<div style="font-size:12px;color:#555;margin-top:4px;">{summary_he}</div>'
+            f'<div style="font-size:11px;color:#888;margin-top:4px;">{source} | {ts}</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+
+# ─── Page 4: Global events ────────────────────────────────────────────────────
+
+def page_global():
+    st.header("🌍 אירועים גלובליים")
+    df = load_sheet_data("Results")
+    if df.empty:
+        st.info(t("no_data"))
+        return
+    if "is_global" not in df.columns:
+        st.info("עדיין לא נאספו אירועים גלובליים")
+        return
+
+    df = _parse_ts_col(df)
+    gdf = df[df["is_global"].astype(str).str.upper().isin(["YES", "TRUE", "1"])]
+    if gdf.empty:
+        st.info("✅ אין אירועים גלובליים שנאספו")
+        return
+
+    gdf = gdf.sort_values("relevance_score", ascending=False)
+    st.caption(f"סה\"כ {len(gdf)} אירועים גלובליים")
+
+    # Global map
+    if "location" in gdf.columns:
+        try:
+            from analyzer import GLOBAL_CITIES
+        except ImportError:
+            GLOBAL_CITIES = []
+        GLOBAL_CITY_COORDS = {
+            "London": (51.5074, -0.1278),
+            "Paris": (48.8566, 2.3522),
+            "Berlin": (52.5200, 13.4050),
+            "Madrid": (40.4168, -3.7038),
+            "Rome": (41.9028, 12.4964),
+            "New York": (40.7128, -74.0060),
+            "Washington": (38.9072, -77.0369),
+            "Sydney": (-33.8688, 151.2093),
+            "Toronto": (43.6532, -79.3832),
+            "Amsterdam": (52.3676, 4.9041),
+            "Brussels": (50.8503, 4.3517),
+            "Stockholm": (59.3293, 18.0686),
+            "Oslo": (59.9139, 10.7522),
+        }
+        loc_counts = gdf["location"].value_counts().to_dict()
+        if FOLIUM_AVAILABLE and loc_counts:
+            fmap = folium.Map(location=[30, 0], zoom_start=2, tiles="cartodbpositron")
+            for city, (lat, lon) in GLOBAL_CITY_COORDS.items():
+                n = loc_counts.get(city, 0)
+                if n == 0:
+                    continue
+                folium.CircleMarker(
+                    location=[lat, lon],
+                    radius=6 + min(20, n * 2),
+                    popup=f"{city}: {n}",
+                    tooltip=f"{city} — {n}",
+                    color="#2980b9", fill=True, fill_opacity=0.6,
+                ).add_to(fmap)
+            st_folium(fmap, width=None, height=380, returned_objects=[])
+        elif loc_counts:
+            rows = []
+            for city, (lat, lon) in GLOBAL_CITY_COORDS.items():
+                if loc_counts.get(city, 0) > 0:
+                    rows.append({"lat": lat, "lon": lon})
+            if rows:
+                st.map(pd.DataFrame(rows), zoom=1)
+
+    st.markdown("---")
+
+    for _, row in gdf.iterrows():
+        _render_global_card(row)
 
 
 # ─── Page: Organizations ──────────────────────────────────────────────────────
@@ -996,12 +1285,23 @@ def page_reports():
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
+def page_admin():
+    st.header("⚙️ ניהול")
+    tab1, tab2, tab3, tab4 = st.tabs(["🏢 ארגונים", "🔑 מילות מפתח", "⚙️ הגדרות", "📊 דוחות"])
+    with tab1:
+        page_organizations()
+    with tab2:
+        page_keywords()
+    with tab3:
+        page_settings()
+    with tab4:
+        page_reports()
+
+
 def main():
-    # Init session state
     if "ui_lang" not in st.session_state:
         st.session_state["ui_lang"] = "he"
 
-    # RTL CSS for Hebrew
     if get_ui_lang() == "he":
         st.markdown("""
         <style>
@@ -1012,16 +1312,16 @@ def main():
 
     page = render_sidebar()
 
-    if page == t("page_findings"):
-        page_findings()
-    elif page == t("page_orgs"):
-        page_organizations()
-    elif page == t("page_keywords"):
-        page_keywords()
-    elif page == t("page_settings"):
-        page_settings()
-    elif page == t("page_reports"):
-        page_reports()
+    if page == "home":
+        page_home()
+    elif page == "review":
+        page_review()
+    elif page == "feed":
+        page_feed()
+    elif page == "global":
+        page_global()
+    elif page == "admin":
+        page_admin()
 
 
 if __name__ == "__main__":
