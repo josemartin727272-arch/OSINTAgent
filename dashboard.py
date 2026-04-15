@@ -85,6 +85,72 @@ UI_TEXT = {
         "ui_language":   "שפת ממשק",
         "summary_weekly":"דוח שבועי אוטומטי",
         "summary_monthly":"דוח חודשי אוטומטי",
+        "page_home":           "🏠 דף בית",
+        "page_review":         "✍️ תור דירוג",
+        "page_feed":           "📰 חדשות מסוננות",
+        "page_global":         "🌍 אירועים גלובליים",
+        "page_admin":          "⚙️ ניהול",
+        "tab_orgs":            "🏢 ארגונים",
+        "tab_keywords":        "🔑 מילות מפתח",
+        "tab_settings":        "⚙️ הגדרות",
+        "tab_reports":         "📊 דוחות",
+        "critical_alerts":     "🔴 התרעות קריטיות",
+        "regular_alerts":      "🟠 התרעות רגילות",
+        "total_week":          "📰 כתבות השבוע",
+        "top10_title":         "🔝 10 הידיעות הרלוונטיות ביותר",
+        "geo_map_title":       "🗺️ פריסה גיאוגרפית — פרו",
+        "lima_map_title":      "📍 לימה — רמת שכונה",
+        "review_queue_title":  "✍️ תור דירוג",
+        "pending_count":       "נותרו {n} כתבות לדירוג",
+        "rated_today":         "דורגו היום: {done}/{total}",
+        "skip":                "דלג ⏭",
+        "no_pending":          "✅ אין כתבות לדירוג כרגע",
+        "feed_title":          "📰 חדשות מסוננות",
+        "search_placeholder":  "חיפוש חופשי...",
+        "period_today":        "היום",
+        "period_week":         "שבוע",
+        "period_month":        "חודש",
+        "period_all":          "הכל",
+        "send_filtered":       "📤 שלח דוח",
+        "send_to_email":       "כתובת מייל",
+        "send_period":         "תקופה",
+        "send_btn":            "שלח",
+        "send_success":        "✅ נשלח!",
+        "global_title":        "🌍 אירועים גלובליים",
+        "global_empty":        "אין אירועים גלובליים כרגע",
+        "findings_over_time":  "📅 ממצאים לפי זמן",
+        "event_types_chart":   "🏷️ סוגי אירועים",
+        "score_dist":          "📊 התפלגות ציונים",
+        "top10_findings":      "🔝 10 הממצאים המובילים",
+        "period_last_week":    "7 ימים אחרונים",
+        "period_last_month":   "30 ימים אחרונים",
+        "period_last_year":    "365 ימים אחרונים",
+        "auto_reports":        "דוחות אוטומטיים",
+        "report_sent":         "✅ הדוח נשלח!",
+        "report_failed":       "שליחה נכשלה",
+        "show_inactive":       "הצג גם לא פעילים",
+        "add_org_title":       "➕ הוסף ארגון",
+        "add_kw_title":        "➕ הוסף מילת מפתח",
+        "weight_help":         "1=נמוך, 2=בינוני, 3=גבוה",
+        "kw_placeholder":      "לדוגמה: protesta Israel Lima",
+        "org_platform":        "פלטפורמה",
+        "scan_log_title":      "📋 יומן סריקות",
+        "pending_badge":       "ממתינות לדירוג",
+        "app_subtitle":        "ניטור פעילות אנטי-ישראלית",
+        "articles":            "כתבות",
+        "results_count":       "תוצאות",
+        "top_cities":          "10 הערים המובילות",
+        "no_location":         "📍 לא זוהה מיקום",
+        "active_badge":        "פעיל",
+        "not_rated":           "לא דורג",
+        "rating_failed":       "שמירה נכשלה",
+        "skipped":             "דולג",
+        "saved":               "נשמר",
+        "need_review_first":   "אין כתבות מדורגות. עבור לתור דירוג כדי להתחיל.",
+        "need_rating_3":       "אין עדיין כתבות בדירוג 3★ או יותר",
+        "global_not_yet":      "עדיין לא נאספו אירועים גלובליים",
+        "no_recent_location":  "אין כתבות ב-7 הימים האחרונים עם מיקום מזוהה",
+        "nav_label":           "ניווט",
     },
     "en": {
         "title":         "🔍 OSINTAgent",
@@ -136,6 +202,72 @@ UI_TEXT = {
         "ui_language":   "UI Language",
         "summary_weekly":"Weekly Auto-Report",
         "summary_monthly":"Monthly Auto-Report",
+        "page_home":           "🏠 Home",
+        "page_review":         "✍️ Review Queue",
+        "page_feed":           "📰 Intelligence Feed",
+        "page_global":         "🌍 Global Events",
+        "page_admin":          "⚙️ Admin",
+        "tab_orgs":            "🏢 Organizations",
+        "tab_keywords":        "🔑 Keywords",
+        "tab_settings":        "⚙️ Settings",
+        "tab_reports":         "📊 Reports",
+        "critical_alerts":     "🔴 Critical Alerts",
+        "regular_alerts":      "🟠 Regular Alerts",
+        "total_week":          "📰 Articles This Week",
+        "top10_title":         "🔝 Top 10 Most Relevant",
+        "geo_map_title":       "🗺️ Geographic Distribution — Peru",
+        "lima_map_title":      "📍 Lima — Neighborhood Level",
+        "review_queue_title":  "✍️ Review Queue",
+        "pending_count":       "{n} articles pending review",
+        "rated_today":         "Rated today: {done}/{total}",
+        "skip":                "Skip ⏭",
+        "no_pending":          "✅ No articles pending review",
+        "feed_title":          "📰 Intelligence Feed",
+        "search_placeholder":  "Free search...",
+        "period_today":        "Today",
+        "period_week":         "Week",
+        "period_month":        "Month",
+        "period_all":          "All",
+        "send_filtered":       "📤 Send Report",
+        "send_to_email":       "Email address",
+        "send_period":         "Period",
+        "send_btn":            "Send",
+        "send_success":        "✅ Sent!",
+        "global_title":        "🌍 Global Events",
+        "global_empty":        "No global events at the moment",
+        "findings_over_time":  "📅 Findings Over Time",
+        "event_types_chart":   "🏷️ Event Types",
+        "score_dist":          "📊 Score Distribution",
+        "top10_findings":      "🔝 Top 10 Findings",
+        "period_last_week":    "Last 7 days",
+        "period_last_month":   "Last 30 days",
+        "period_last_year":    "Last 365 days",
+        "auto_reports":        "Auto Reports",
+        "report_sent":         "✅ Report sent!",
+        "report_failed":       "Send failed",
+        "show_inactive":       "Show inactive too",
+        "add_org_title":       "➕ Add Organization",
+        "add_kw_title":        "➕ Add Keyword",
+        "weight_help":         "1=Low, 2=Medium, 3=High",
+        "kw_placeholder":      "e.g. protesta Israel Lima",
+        "org_platform":        "Platform",
+        "scan_log_title":      "📋 Scan Log",
+        "pending_badge":       "pending review",
+        "app_subtitle":        "Anti-Israel Activity Monitor",
+        "articles":            "articles",
+        "results_count":       "results",
+        "top_cities":          "Top 10 Cities",
+        "no_location":         "📍 No location identified",
+        "active_badge":        "active",
+        "not_rated":           "Not rated",
+        "rating_failed":       "Save failed",
+        "skipped":             "Skipped",
+        "saved":               "Saved",
+        "need_review_first":   "No rated articles yet. Go to Review Queue to start.",
+        "need_rating_3":       "No articles rated 3★ or higher yet",
+        "global_not_yet":      "No global events collected yet",
+        "no_recent_location":  "No located articles in the last 7 days",
+        "nav_label":           "Navigation",
     },
     "es": {
         "title":         "🔍 OSINTAgent",
@@ -187,6 +319,72 @@ UI_TEXT = {
         "ui_language":   "Idioma de interfaz",
         "summary_weekly":"Informe semanal automático",
         "summary_monthly":"Informe mensual automático",
+        "page_home":           "🏠 Inicio",
+        "page_review":         "✍️ Cola de Revisión",
+        "page_feed":           "📰 Noticias Filtradas",
+        "page_global":         "🌍 Eventos Globales",
+        "page_admin":          "⚙️ Administración",
+        "tab_orgs":            "🏢 Organizaciones",
+        "tab_keywords":        "🔑 Palabras Clave",
+        "tab_settings":        "⚙️ Configuración",
+        "tab_reports":         "📊 Informes",
+        "critical_alerts":     "🔴 Alertas Críticas",
+        "regular_alerts":      "🟠 Alertas Regulares",
+        "total_week":          "📰 Artículos Esta Semana",
+        "top10_title":         "🔝 Top 10 Más Relevantes",
+        "geo_map_title":       "🗺️ Distribución Geográfica — Perú",
+        "lima_map_title":      "📍 Lima — Nivel Barrio",
+        "review_queue_title":  "✍️ Cola de Revisión",
+        "pending_count":       "Quedan {n} artículos por revisar",
+        "rated_today":         "Revisados hoy: {done}/{total}",
+        "skip":                "Saltar ⏭",
+        "no_pending":          "✅ No hay artículos pendientes",
+        "feed_title":          "📰 Noticias Filtradas",
+        "search_placeholder":  "Búsqueda libre...",
+        "period_today":        "Hoy",
+        "period_week":         "Semana",
+        "period_month":        "Mes",
+        "period_all":          "Todo",
+        "send_filtered":       "📤 Enviar Informe",
+        "send_to_email":       "Correo electrónico",
+        "send_period":         "Período",
+        "send_btn":            "Enviar",
+        "send_success":        "✅ ¡Enviado!",
+        "global_title":        "🌍 Eventos Globales",
+        "global_empty":        "No hay eventos globales en este momento",
+        "findings_over_time":  "📅 Hallazgos por Tiempo",
+        "event_types_chart":   "🏷️ Tipos de Eventos",
+        "score_dist":          "📊 Distribución de Puntuaciones",
+        "top10_findings":      "🔝 Top 10 Hallazgos",
+        "period_last_week":    "Últimos 7 días",
+        "period_last_month":   "Últimos 30 días",
+        "period_last_year":    "Últimos 365 días",
+        "auto_reports":        "Informes Automáticos",
+        "report_sent":         "✅ ¡Informe enviado!",
+        "report_failed":       "Error al enviar",
+        "show_inactive":       "Mostrar también inactivos",
+        "add_org_title":       "➕ Agregar Organización",
+        "add_kw_title":        "➕ Agregar Palabra Clave",
+        "weight_help":         "1=Bajo, 2=Medio, 3=Alto",
+        "kw_placeholder":      "p.ej. protesta Israel Lima",
+        "org_platform":        "Plataforma",
+        "scan_log_title":      "📋 Registro de Escaneos",
+        "pending_badge":       "pendientes de revisión",
+        "app_subtitle":        "Monitor de Actividad Anti-Israel",
+        "articles":            "artículos",
+        "results_count":       "resultados",
+        "top_cities":          "Top 10 Ciudades",
+        "no_location":         "📍 Sin ubicación identificada",
+        "active_badge":        "activo",
+        "not_rated":           "Sin puntuar",
+        "rating_failed":       "Error al guardar",
+        "skipped":             "Saltado",
+        "saved":               "Guardado",
+        "need_review_first":   "No hay artículos puntuados. Ve a la Cola de Revisión para empezar.",
+        "need_rating_3":       "Aún no hay artículos con 3★ o más",
+        "global_not_yet":      "Aún no se han recolectado eventos globales",
+        "no_recent_location":  "No hay artículos con ubicación en los últimos 7 días",
+        "nav_label":           "Navegación",
     },
 }
 
@@ -223,16 +421,15 @@ LIMA_NEIGHBORHOODS = {
 
 
 PERU_CITIES = {
-    "Lima":      "🏙️ לימה",
-    "Cusco":     "🏔️ קוסקו",
-    "Arequipa":  "🌋 ארקיפה",
-    "Trujillo":  "🎭 טרוחיו",
-    "Chiclayo":  "🌿 צ'יקלאיו",
-    "Piura":     "☀️ פיורה",
-    "Ayacucho":  "⛪ איאקוצ'ו",
-    "Puno":      "🎵 פונו",
-    "Huancayo":  "🏞️ ואנקאיו",
-    "אחר":       "📍 ערים אחרות",
+    "Lima":      "🏙️ Lima",
+    "Cusco":     "🏔️ Cusco",
+    "Arequipa":  "🌋 Arequipa",
+    "Trujillo":  "🎭 Trujillo",
+    "Chiclayo":  "🌿 Chiclayo",
+    "Piura":     "☀️ Piura",
+    "Ayacucho":  "⛪ Ayacucho",
+    "Puno":      "🎵 Puno",
+    "Huancayo":  "🏞️ Huancayo",
 }
 
 
@@ -356,13 +553,13 @@ def score_badge(score) -> str:
 
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-PAGES = {
-    "🏠 דף בית":           "home",
-    "✍️ תור דירוג":         "review",
-    "📰 חדשות מסוננות":    "feed",
-    "🌍 אירועים גלובליים": "global",
-    "⚙️ ניהול":             "admin",
-}
+PAGE_ORDER = [
+    ("page_home",   "home"),
+    ("page_review", "review"),
+    ("page_feed",   "feed"),
+    ("page_global", "global"),
+    ("page_admin",  "admin"),
+]
 
 
 def _count_pending_ratings() -> int:
@@ -380,9 +577,9 @@ def _count_pending_ratings() -> int:
 
 def render_sidebar():
     with st.sidebar:
-        lang_options = {"עברית": "he", "English": "en", "Español": "es"}
+        lang_options = [("עברית", "he"), ("English", "en"), ("Español", "es")]
         cols = st.columns(3)
-        for i, (label, code) in enumerate(lang_options.items()):
+        for i, (label, code) in enumerate(lang_options):
             if cols[i].button(label, key=f"lang_{code}",
                               type="primary" if get_ui_lang() == code else "secondary"):
                 st.session_state["ui_lang"] = code
@@ -390,24 +587,25 @@ def render_sidebar():
 
         st.markdown("---")
         st.title("🔍 OSINTAgent")
-        st.caption("ניטור פעילות אנטי-ישראלית")
+        st.caption(t("app_subtitle"))
         st.info("🌍 Peru")
 
         st.markdown("---")
 
         pending = _count_pending_ratings()
         page_labels = []
-        for label in PAGES.keys():
-            if label.startswith("✍️") and pending > 0:
+        for t_key, _ in PAGE_ORDER:
+            label = t(t_key)
+            if t_key == "page_review" and pending > 0:
                 page_labels.append(f"{label} 🔴 {pending}")
             else:
                 page_labels.append(label)
 
-        selected = st.radio("Navigation", page_labels, label_visibility="collapsed")
+        selected = st.radio(t("nav_label"), page_labels, label_visibility="collapsed")
         st.markdown("---")
 
     idx = page_labels.index(selected)
-    return list(PAGES.values())[idx]
+    return PAGE_ORDER[idx][1]
 
 
 # ─── Page: Findings ───────────────────────────────────────────────────────────
@@ -449,7 +647,7 @@ def _render_finding_card(row, idx, with_rating=True):
     if not with_rating:
         return
 
-    stars_label = {0: "לא דורג", 1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐"}
+    stars_label = {0: t("not_rated"), 1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐"}
     col_r1, col_r2, col_r3, col_r4, col_r5, col_cur = st.columns([1,1,1,1,1,4])
     for star, col in zip([1,2,3,4,5], [col_r1,col_r2,col_r3,col_r4,col_r5]):
         btn_label = "⭐" if star <= current_rating else "☆"
@@ -475,7 +673,7 @@ def _render_finding_card(row, idx, with_rating=True):
             except Exception as e:
                 st.error(f"Rating save failed: {e}")
     if current_rating > 0:
-        col_cur.caption(f"דירוג: {stars_label[current_rating]}")
+        col_cur.caption(stars_label[current_rating])
     st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
 
 
@@ -559,7 +757,7 @@ def _render_peru_map(df: pd.DataFrame):
     recent["_city"] = recent["location"].apply(_peru_city_bucket)
     counts = recent.groupby("_city").size().to_dict()
     if not counts:
-        st.info("אין כתבות ב-7 הימים האחרונים עם מיקום מזוהה")
+        st.info(t("no_recent_location"))
         return
 
     if FOLIUM_AVAILABLE:
@@ -571,7 +769,7 @@ def _render_peru_map(df: pd.DataFrame):
             folium.CircleMarker(
                 location=[lat, lon],
                 radius=6 + min(20, n * 2),
-                popup=f"{city}: {n} כתבות",
+                popup=f"{city}: {n} {t('articles')}",
                 tooltip=f"{city} — {n}",
                 color="#cc0000", fill=True, fill_opacity=0.6,
             ).add_to(fmap)
@@ -592,7 +790,7 @@ def _render_lima_map(df: pd.DataFrame):
     lima = df[df["location"].astype(str).str.contains("Lima", case=False, na=False)]
     if lima.empty:
         return
-    st.markdown(f"**🏙️ לימה — {len(lima)} כתבות**")
+    st.markdown(f"**🏙️ Lima — {len(lima)} {t('articles')}**")
     if FOLIUM_AVAILABLE:
         fmap = folium.Map(location=[-12.0764, -77.0300], zoom_start=11, tiles="cartodbpositron")
         for name, (lat, lon) in LIMA_NEIGHBORHOODS.items():
@@ -611,7 +809,7 @@ def _render_lima_map(df: pd.DataFrame):
 # ─── Page 1: Home ─────────────────────────────────────────────────────────────
 
 def page_home():
-    st.header("🏠 דף בית")
+    st.header(t("page_home"))
 
     with st.spinner(t("loading")):
         df = load_sheet_data("Results")
@@ -629,25 +827,24 @@ def page_home():
     c1, c2, c3, c4 = st.columns(4)
     crit = len(last_24h[last_24h["relevance_score"] >= 8]) if "relevance_score" in last_24h.columns else 0
     reg  = len(last_24h[(last_24h["relevance_score"] >= 6) & (last_24h["relevance_score"] < 8)]) if "relevance_score" in last_24h.columns else 0
-    c1.metric("🔴 קריטיות (24ש)", crit)
-    c2.metric("🟠 רגילות (24ש)", reg)
-    c3.metric("📰 כתבות (שבוע)", len(last_7d))
+    c1.metric(t("critical_alerts"), crit)
+    c2.metric(t("regular_alerts"), reg)
+    c3.metric(t("total_week"), len(last_7d))
 
-    # Last scan from ScanLog
     scan_df = load_sheet_data("ScanLog")
     if not scan_df.empty:
         last_row = scan_df.iloc[-1]
-        c4.metric("🕐 סריקה אחרונה",
+        c4.metric(t("last_scan"),
                   str(last_row.get("timestamp", ""))[5:16],
                   delta=str(last_row.get("status", "")),
                   delta_color="off")
     else:
-        c4.metric("🕐 סריקה אחרונה", "—")
+        c4.metric(t("last_scan"), "—")
 
     st.markdown("---")
 
     # Top 10 most-relevant (last 7 days)
-    st.markdown("### 🔥 10 הידיעות הכי רלוונטיות (שבוע אחרון)")
+    st.markdown(f"### {t('top10_title')}")
     if "relevance_score" in last_7d.columns and not last_7d.empty:
         top = last_7d.sort_values("relevance_score", ascending=False).head(10)
         for _, row in top.iterrows():
@@ -680,13 +877,12 @@ def page_home():
     st.markdown("---")
 
     # Peru national map
-    st.markdown("### 🗺️ מפת פרו — 7 ימים אחרונים")
+    st.markdown(f"### {t('geo_map_title')}")
     _render_peru_map(df)
 
     st.markdown("---")
 
-    # Lima focused map
-    st.markdown("### 🏙️ מפת לימה")
+    st.markdown(f"### {t('lima_map_title')}")
     _render_lima_map(df)
 
 
@@ -709,7 +905,7 @@ _MOBILE_CSS = """
 
 def page_review():
     st.markdown(_MOBILE_CSS, unsafe_allow_html=True)
-    st.header("✍️ תור דירוג")
+    st.header(t("review_queue_title"))
 
     df = load_sheet_data("Results")
     if df.empty:
@@ -727,16 +923,17 @@ def page_review():
     total = len(df)
     done  = len(rated_today)
 
-    st.caption(f"נותרו {len(unrated)} כתבות לדירוג")
+    st.caption(t("pending_count").format(n=len(unrated)))
     if total:
-        st.progress(min(1.0, done / total), text=f"דורגו: {done}/{total}")
+        st.progress(min(1.0, done / total),
+                    text=t("rated_today").format(done=done, total=total))
 
     # Filter skipped in session
     skipped = st.session_state.setdefault("review_skipped", set())
     queue = unrated[~unrated["link"].astype(str).isin(skipped)]
 
     if queue.empty:
-        st.success("✅ אין כתבות לדירוג כרגע")
+        st.success(t("no_pending"))
         return
 
     row = queue.iloc[0]
@@ -762,45 +959,46 @@ def page_review():
     )
 
     cols = st.columns(6)
-    star_labels = ["⭐1", "⭐⭐2", "⭐⭐⭐3", "⭐⭐⭐⭐4", "⭐⭐⭐⭐⭐5", "דלג ⏭"]
+    star_labels = ["⭐1", "⭐⭐2", "⭐⭐⭐3", "⭐⭐⭐⭐4", "⭐⭐⭐⭐⭐5", t("skip")]
     for i, label in enumerate(star_labels):
         key = f"review_{idx}_{i}"
         if cols[i].button(label, key=key, use_container_width=True):
             if i < 5:
                 try:
                     _save_rating(link, i + 1)
-                    st.toast(f"נשמר: {i+1}★")
+                    st.toast(f"{t('saved')}: {i+1}★")
                 except Exception as e:
-                    st.error(f"שמירה נכשלה: {e}")
+                    st.error(f"{t('rating_failed')}: {e}")
             else:
                 skipped.add(link)
-                st.toast("דולג")
+                st.toast(t("skipped"))
             st.rerun()
 
 
 # ─── Page 3: Filtered feed ────────────────────────────────────────────────────
 
 def page_feed():
-    st.header("📰 חדשות מסוננות")
+    st.header(t("feed_title"))
     df = load_sheet_data("Results")
     if df.empty or "rating" not in df.columns:
-        st.info("אין כתבות מדורגות. עבור לתור דירוג כדי להתחיל.")
+        st.info(t("need_review_first"))
         return
 
     df = _parse_ts_col(df)
     df["_rating"] = df["rating"].apply(lambda x: int(x) if str(x).strip().isdigit() else 0)
     df = df[df["_rating"] >= 3]
     if df.empty:
-        st.info("אין עדיין כתבות בדירוג 3★ או יותר")
+        st.info(t("need_rating_3"))
         return
 
-    # Filters
-    with st.expander("🔍 פילטרים", expanded=True):
-        search_q = st.text_input("🔎 חיפוש טקסט", "")
-        period = st.radio("תקופה", ["היום", "שבוע", "חודש", "הכל"],
+    period_labels = [t("period_today"), t("period_week"), t("period_month"), t("period_all")]
+
+    with st.expander(f"🔍 {t('filters')}", expanded=True):
+        search_q = st.text_input(t("search_placeholder"), "")
+        period = st.radio(t("send_period"), period_labels,
                           horizontal=True, index=3)
         etypes_avail = sorted([e for e in df["event_type"].dropna().unique() if e])
-        etype_sel = st.multiselect("סוג אירוע", etypes_avail, default=etypes_avail)
+        etype_sel = st.multiselect(t("event_type"), etypes_avail, default=etypes_avail)
 
     filtered = df.copy()
     if search_q:
@@ -811,35 +1009,35 @@ def page_feed():
         ]
 
     now = pd.Timestamp.now()
-    if period == "היום":
+    if period == t("period_today"):
         filtered = filtered[filtered["_ts"] >= now - pd.Timedelta(days=1)]
-    elif period == "שבוע":
+    elif period == t("period_week"):
         filtered = filtered[filtered["_ts"] >= now - pd.Timedelta(days=7)]
-    elif period == "חודש":
+    elif period == t("period_month"):
         filtered = filtered[filtered["_ts"] >= now - pd.Timedelta(days=30)]
 
     if etype_sel:
         filtered = filtered[filtered["event_type"].isin(etype_sel)]
 
     filtered = filtered.sort_values("relevance_score", ascending=False)
-    st.caption(f"מציג {len(filtered)} כתבות")
+    st.caption(f"{len(filtered)} {t('articles')}")
 
-    # Email section
-    with st.expander("📤 שלח דוח"):
+    with st.expander(t("send_filtered")):
         default_email = os.environ.get("ALERT_EMAIL_TO", "")
         try:
             default_email = st.secrets.get("ALERT_EMAIL_TO", default_email)
         except Exception:
             pass
-        recipient = st.text_input("מייל", value=default_email)
-        period_label = st.selectbox("תקופה", ["היום", "שבוע", "חודש"], key="feed_email_period")
-        if st.button("שלח", type="primary"):
+        recipient = st.text_input(t("send_to_email"), value=default_email)
+        email_period_labels = [t("period_today"), t("period_week"), t("period_month")]
+        period_label = st.selectbox(t("send_period"), email_period_labels, key="feed_email_period")
+        if st.button(t("send_btn"), type="primary"):
             try:
                 from notifier import send_filtered_report
                 send_filtered_report(filtered.to_dict("records"), recipient, period_label)
-                st.success("נשלח!")
+                st.success(t("send_success"))
             except Exception as e:
-                st.error(f"שליחה נכשלה: {e}")
+                st.error(f"{t('report_failed')}: {e}")
 
     st.markdown("---")
 
@@ -873,23 +1071,23 @@ def page_feed():
 # ─── Page 4: Global events ────────────────────────────────────────────────────
 
 def page_global():
-    st.header("🌍 אירועים גלובליים")
+    st.header(t("global_title"))
     df = load_sheet_data("Results")
     if df.empty:
         st.info(t("no_data"))
         return
     if "is_global" not in df.columns:
-        st.info("עדיין לא נאספו אירועים גלובליים")
+        st.info(t("global_not_yet"))
         return
 
     df = _parse_ts_col(df)
     gdf = df[df["is_global"].astype(str).str.upper().isin(["YES", "TRUE", "1"])]
     if gdf.empty:
-        st.info("✅ אין אירועים גלובליים שנאספו")
+        st.info(t("global_empty"))
         return
 
     gdf = gdf.sort_values("relevance_score", ascending=False)
-    st.caption(f"סה\"כ {len(gdf)} אירועים גלובליים")
+    st.caption(f"{len(gdf)} {t('results_count')}")
 
     # Global map
     if "location" in gdf.columns:
@@ -954,7 +1152,7 @@ def page_organizations():
             st.info(t("no_data"))
         else:
             # Filter by active
-            show_inactive = st.checkbox("הצג גם לא פעילים / Show inactive")
+            show_inactive = st.checkbox(t("show_inactive"))
             if not show_inactive and "active" in df.columns:
                 df_show = df[df["active"].astype(str).str.upper().isin(["TRUE", "1", "YES", ""])]
             else:
@@ -992,7 +1190,7 @@ def page_organizations():
 
     with tab2:
         with st.form("add_org_form"):
-            st.subheader(f"➕ {t('add')} Organization")
+            st.subheader(t("add_org_title"))
             c1, c2 = st.columns(2)
             new_name     = c1.text_input(t("name"))
             new_platform = c2.selectbox(t("platform"), ["Instagram", "Facebook", "Twitter/X", "YouTube", "Website", "Other"])
@@ -1017,7 +1215,7 @@ def page_organizations():
                         st.success(f"✅ Added: {new_name}")
                         st.rerun()
                 else:
-                    st.error("Name is required")
+                    st.error(t("name"))
 
 
 # ─── Page: Keywords ───────────────────────────────────────────────────────────
@@ -1077,10 +1275,10 @@ def page_keywords():
 
     with tab2:
         with st.form("add_kw_form"):
-            st.subheader(f"➕ {t('add')} Keyword")
-            new_kw = st.text_input(t("keywords"), placeholder="e.g. protesta Israel Lima")
+            st.subheader(t("add_kw_title"))
+            new_kw = st.text_input(t("keywords"), placeholder=t("kw_placeholder"))
             new_weight = st.select_slider(t("weight"), options=[1, 2, 3], value=2,
-                                          help="1=Low, 2=Medium, 3=High")
+                                          help=t("weight_help"))
             if st.form_submit_button(t("save")):
                 if new_kw.strip():
                     ws = get_worksheet("Keywords")
@@ -1093,7 +1291,7 @@ def page_keywords():
                         st.success(f"✅ Added: {new_kw}")
                         st.rerun()
                 else:
-                    st.error("Keyword cannot be empty")
+                    st.error(f"{t('keywords')} — {t('filters')}")
 
 
 # ─── Page: Settings ───────────────────────────────────────────────────────────
@@ -1138,7 +1336,7 @@ def page_settings():
         sel_email = st.checkbox(t("email_alerts"),
                                 value=settings.get("email_alerts", "true").lower() == "true")
 
-        st.subheader(f"📊 Auto-Reports")
+        st.subheader(f"📊 {t('auto_reports')}")
         col3, col4 = st.columns(2)
         sel_weekly = col3.checkbox(t("summary_weekly"),
                                    value=settings.get("weekly_summary", "true").lower() == "true")
@@ -1161,7 +1359,7 @@ def page_settings():
 
     # ── Scan Log ──────────────────────────────────────────────────────────────
     st.markdown("---")
-    st.subheader(f"📋 {t('last_scan')} Log")
+    st.subheader(t("scan_log_title"))
     df_log = load_sheet_data("ScanLog")
     if not df_log.empty:
         st.dataframe(df_log.tail(20).iloc[::-1], use_container_width=True)
@@ -1191,20 +1389,20 @@ def page_reports():
 
     if period == t("weekly"):
         cutoff = now - pd.Timedelta(days=7)
-        label = f"שבוע אחרון / Last 7 days"
+        label = t("period_last_week")
     elif period == t("monthly"):
         cutoff = now - pd.Timedelta(days=30)
-        label = f"חודש אחרון / Last 30 days"
+        label = t("period_last_month")
     else:
         cutoff = now - pd.Timedelta(days=365)
-        label = f"שנה אחרונה / Last 365 days"
+        label = t("period_last_year")
 
     if "ts_parsed" in df.columns:
         df_period = df[df["ts_parsed"] >= cutoff]
     else:
         df_period = df
 
-    st.caption(f"📅 {label} — {len(df_period)} ממצאים")
+    st.caption(f"📅 {label} — {len(df_period)} {t('results_count')}")
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
     col1, col2, col3, col4 = st.columns(4)
@@ -1214,15 +1412,14 @@ def page_reports():
     avg = df_period["relevance_score"].mean() if "relevance_score" in df_period else 0
     col3.metric(t("avg_score"), f"{avg:.1f}" if avg else "—")
     high = len(df_period[df_period["relevance_score"] >= 8]) if "relevance_score" in df_period else 0
-    col4.metric("🔴 Critical (8+)", high)
+    col4.metric(t("critical_alerts") + " (8+)", high)
 
     st.markdown("---")
 
-    # ── Charts ────────────────────────────────────────────────────────────────
     col_left, col_right = st.columns(2)
 
     with col_left:
-        st.subheader("📅 Findings over time")
+        st.subheader(t("findings_over_time"))
         if "ts_parsed" in df_period.columns and not df_period.empty:
             by_day = df_period.groupby(df_period["ts_parsed"].dt.date).size().reset_index()
             by_day.columns = ["date", "count"]
@@ -1231,7 +1428,7 @@ def page_reports():
             st.info(t("no_data"))
 
     with col_right:
-        st.subheader("🏷️ Event Types")
+        st.subheader(t("event_types_chart"))
         if "event_type" in df_period.columns and not df_period.empty:
             by_type = df_period["event_type"].value_counts().reset_index()
             by_type.columns = ["event_type", "count"]
@@ -1242,7 +1439,7 @@ def page_reports():
 
     # Score distribution
     if "relevance_score" in df_period.columns and not df_period.empty:
-        st.subheader("📊 Score Distribution")
+        st.subheader(t("score_dist"))
         buckets = pd.cut(df_period["relevance_score"],
                          bins=[0, 2, 4, 6, 8, 10],
                          labels=["1-2", "3-4", "5-6", "7-8", "9-10"])
@@ -1251,7 +1448,7 @@ def page_reports():
         st.bar_chart(dist.set_index("Score Range"))
 
     # Top findings table
-    st.subheader(f"🔝 Top 10 Findings")
+    st.subheader(t("top10_findings"))
     if not df_period.empty and "relevance_score" in df_period.columns:
         top10 = df_period.nlargest(10, "relevance_score")[
             ["timestamp", "relevance_score", "title", "event_type", "location", "org_name", "link"]
@@ -1267,7 +1464,7 @@ def page_reports():
     col_send, col_info = st.columns([2, 3])
     with col_send:
         if st.button(f"📤 {t('send_report')} ({period})", type="primary"):
-            with st.spinner("Sending..."):
+            with st.spinner(t("loading")):
                 try:
                     from summary_runner import run as run_summary
                     period_map = {
@@ -1276,18 +1473,19 @@ def page_reports():
                         t("annual"): "annual",
                     }
                     run_summary(period_map.get(period, "weekly"))
-                    st.success("✅ Report sent!")
+                    st.success(t("report_sent"))
                 except Exception as e:
-                    st.error(f"Failed: {e}")
+                    st.error(f"{t('report_failed')}: {e}")
     with col_info:
-        st.caption("השלח דוח מסכם למייל / Send summary email with charts and top findings")
+        st.caption(t("send_report"))
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def page_admin():
-    st.header("⚙️ ניהול")
-    tab1, tab2, tab3, tab4 = st.tabs(["🏢 ארגונים", "🔑 מילות מפתח", "⚙️ הגדרות", "📊 דוחות"])
+    st.header(t("page_admin"))
+    tab1, tab2, tab3, tab4 = st.tabs([t("tab_orgs"), t("tab_keywords"),
+                                      t("tab_settings"), t("tab_reports")])
     with tab1:
         page_organizations()
     with tab2:
@@ -1302,13 +1500,27 @@ def main():
     if "ui_lang" not in st.session_state:
         st.session_state["ui_lang"] = "he"
 
-    if get_ui_lang() == "he":
-        st.markdown("""
-        <style>
-            .stMarkdown, .stText, p, li { direction: rtl; text-align: right; }
-            .stMetric { direction: rtl; }
-        </style>
-        """, unsafe_allow_html=True)
+    lang = get_ui_lang()
+    direction  = "rtl"   if lang == "he" else "ltr"
+    text_align = "right" if lang == "he" else "left"
+
+    st.markdown(f"""
+    <style>
+    .stMarkdown, .stText, p, li, h1, h2, h3, label {{
+        direction: {direction} !important;
+        text-align: {text_align} !important;
+    }}
+    .stMetric {{ direction: {direction}; }}
+    @media (max-width: 768px) {{
+        .stButton > button {{
+            font-size: 18px !important;
+            padding: 10px 2px !important;
+            min-height: 48px !important;
+        }}
+        div[data-testid="column"] {{ padding: 0 1px !important; }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
     page = render_sidebar()
 
