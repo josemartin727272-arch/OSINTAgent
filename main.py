@@ -4,6 +4,7 @@ main.py — OSINTAgent entry point.
 
 import sys
 import time
+from difflib import SequenceMatcher
 from scanner import fetch_all_articles
 from analyzer import analyze_all, build_feedback_boost
 from sheets import (load_organizations, load_keywords, load_settings,
@@ -11,6 +12,26 @@ from sheets import (load_organizations, load_keywords, load_settings,
                     load_rated_results, load_low_rated_results)
 from notifier import send_alert_email
 from config import ALERT_THRESHOLD
+
+
+def _dedup_by_title(articles: list, threshold: float = 0.75) -> list:
+    """Drop near-duplicate titles, keeping the highest-scoring one per cluster."""
+    seen_titles = []
+    unique = []
+    ordered = sorted(articles, key=lambda x: x.get("relevance_score", 0) or 0, reverse=True)
+    for article in ordered:
+        title = str(article.get("title", "")).lower()[:60]
+        if not title:
+            unique.append(article)
+            continue
+        is_dup = any(
+            SequenceMatcher(None, title, seen).ratio() > threshold
+            for seen in seen_titles
+        )
+        if not is_dup:
+            seen_titles.append(title)
+            unique.append(article)
+    return unique
 
 
 def run():
@@ -66,7 +87,9 @@ def run():
     try:
         existing_links = get_existing_links()
         articles = [a for a in articles if a["link"] not in existing_links]
-        print(f"[main] After dedup: {len(articles)}")
+        print(f"[main] After link dedup: {len(articles)}")
+        articles = _dedup_by_title(articles)
+        print(f"[main] After title dedup: {len(articles)}")
     except Exception as e:
         print(f"[main] Dedup warning: {e}")
 

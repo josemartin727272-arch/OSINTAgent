@@ -105,10 +105,64 @@ def _text(article: dict) -> str:
     return (article.get("title", "") + " " + article.get("summary", "")).lower()
 
 
-def _is_peru_relevant(text: str, country: str = "Peru") -> bool:
-    """False if the article text does not mention the target country at all."""
-    country_kws = LOCATION_KEYWORDS.get(country, [country])
-    return any(kw.lower() in text for kw in country_kws)
+OTHER_COUNTRIES = [
+    "españa", "spain", "madrid", "barcelona",
+    "argentina", "buenos aires", "milei",
+    "estados unidos", "eeuu", "ee.uu.", "washington", "michigan",
+    "iran", "irán", "teherán", "tehran",
+    "líbano", "lebanon", "beirut",
+    "venezuela", "colombia", "chile", "méxico", "mexico",
+    "reino unido", "united kingdom", "london", "londres",
+    "alemania", "germany", "berlin",
+    "turquía", "turkey", "istanbul", "estambul",
+    "marruecos", "morocco",
+]
+
+PERU_INDICATORS = [
+    "perú", "peru", "lima", "peruano", "peruanos", "peruana", "peruanas",
+    "cusco", "arequipa", "trujillo", "piura", "iquitos", "chiclayo",
+    "unmsm", "pucp", "san marcos", "miraflores", "san isidro",
+    "boluarte", "fujimori", "castillo", "onpe",
+    "פרו",
+]
+
+NOISE_SOURCES = [
+    "fathom journal", "fathomjournal.org", "travel and tour world",
+    "turkmenportal", "dd news",
+]
+
+
+def _is_peru_relevant(article, country: str = "Peru") -> bool:
+    """
+    Strict Peru filter:
+      - noise sources → False
+      - explicit Peru/Lima indicator in text → True
+      - only another country mentioned (no Peru) → False
+      - otherwise → True (benefit of the doubt)
+    For non-Peru countries we do not apply a hard filter.
+    """
+    if country != "Peru":
+        return True
+
+    if isinstance(article, str):
+        source = ""
+        text = article.lower()
+    else:
+        source  = str(article.get("source", "")).lower()
+        title   = str(article.get("title", "")).lower()
+        summary = str(article.get("summary", "")).lower()
+        text    = title + " " + summary
+
+    if any(ns in source for ns in NOISE_SOURCES):
+        return False
+
+    if any(ind in text for ind in PERU_INDICATORS):
+        return True
+
+    if any(other in text for other in OTHER_COUNTRIES):
+        return False
+
+    return True
 
 
 def _count(text: str, keywords: list) -> int:
@@ -248,7 +302,7 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
             detected_org = match
             article = {**article, "org_name": detected_org}
 
-    if not is_global and not _is_peru_relevant(text, country):
+    if not is_global and not _is_peru_relevant(article, country):
         return {
             **article,
             "relevance_score": 0,
@@ -260,6 +314,7 @@ def analyze_article(article: dict, keywords: dict, country: str = "Peru",
             "summary_es":      "",
             "is_alert":        False,
             "is_global":       False,
+            "score_method":    "geo_filtered",
         }
 
     country_kws = LOCATION_KEYWORDS.get(country, [country])

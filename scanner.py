@@ -58,6 +58,20 @@ GLOBAL_ANTI_ISRAEL_QUERIES = [
     "boycott Israel international",
 ]
 
+PERU_FOCUSED_QUERIES = [
+    "protesta Lima Israel Palestina",
+    "manifestación Lima contra Israel",
+    "BDS Perú Lima",
+    "boicot Israel Lima Perú",
+    "comunidad judía Lima Perú",
+    "embajada Israel Lima Perú",
+    "antisemitismo Perú",
+    "Palestina universitarios Perú",
+    "marcha Lima Palestina 2025",
+    "marcha Lima Palestina 2026",
+]
+
+
 SOCIAL_KEYWORD_QUERIES = [
     "Facebook Palestine Peru protesta",
     "Instagram Palestine Peru manifestación",
@@ -176,6 +190,15 @@ def fetch_all_articles(organizations: list, keywords: dict,
         all_articles.extend(results)
 
     print(f"[scanner] Keyword total: {len(all_articles)}")
+
+    # Peru-focused queries (already include Peru/Lima explicitly)
+    if country_name == "Peru":
+        for query in PERU_FOCUSED_QUERIES:
+            results = _fetch_query(query, "PeruFocus", seen_urls, languages, country_code,
+                                   country_filter=False, country_name=country_name)
+            if results:
+                print(f"[scanner]   [peru-focus] '{query}' → {len(results)}")
+            all_articles.extend(results)
 
     # Global anti-Israel events (embassy protests, mass rallies)
     global_events = fetch_global_events(seen_urls, languages)
